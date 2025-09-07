@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 // import { useAuthState } from "react-firebase-hooks/auth";
 // import { auth } from "./firebase";
 
@@ -17,7 +17,8 @@ const App = () => {
     <Router>
       {/* {user && <Header />} */}
       <Routes>
-        <Route path="/" exact element={<LandingPage />} />
+{/*         <Route path="/" exact element={<LandingPage />} /> */}
+        <Route path="/" exact element={<Navigate to="/login" replace />} />
         <Route path="/login" exact element={<Login />} />
         <Route path="/signup" exact element={<Signup />} />
         {/* Protect Dashboard and Resume Builder */}
