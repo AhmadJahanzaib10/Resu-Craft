@@ -17,7 +17,7 @@ const App = () => {
     <Router>
       {/* {user && <Header />} */}
       <Routes>
-        <Route path="/" exact element={<LandingPage />} />
+        <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" exact element={<Login />} />
         <Route path="/signup" exact element={<Signup />} />
         {/* Protect Dashboard and Resume Builder */}
