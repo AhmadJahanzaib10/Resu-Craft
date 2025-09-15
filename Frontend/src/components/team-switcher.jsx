@@ -1,6 +1,6 @@
 import * as React from "react"
 import { ChevronsUpDown, Plus } from "lucide-react"
-import mockLogo from "@/assets/images/mockLogo.png"
+import Logo from "@/assets/images/logo.png"
 
 import {
   DropdownMenu,
@@ -37,12 +37,12 @@ export function TeamSwitcher({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <div
-                className="text-primary flex aspect-square text-lg font-pextralight size-8 items-center justify-center ">
-              <img src={mockLogo} alt="logo" className="w-7 h-7" />
+                className="text-primary w-100 flex aspect-square text-lg font-pextralight size-8 items-center justify-center ">
+              <img src={Logo} alt="logo" className="w-100" />
               </div>
-              <div className="grid flex-1 text-left text-lg leading-tight">
+              {/* <div className="grid flex-1 text-left text-lg leading-tight">
                 <span className="truncate font-pextralight text-primary">Resume Shaper</span>
-              </div>
+              </div> */}
             </SidebarMenuButton>
           </DropdownMenuTrigger>
          

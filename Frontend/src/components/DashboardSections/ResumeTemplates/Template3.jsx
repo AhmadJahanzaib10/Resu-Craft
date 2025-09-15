@@ -173,11 +173,11 @@ export function generateTemplate3PDF(resume) {
   });
 
   // Skills with "bars" (approximation)
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(...headingColor);
-  doc.text("SKILLS", contentStartX, rightY);
-  rightY += 20;
+  // doc.setFont("helvetica", "bold");
+  // doc.setFontSize(12);
+  // doc.setTextColor(...headingColor);
+  // doc.text("SKILLS", contentStartX, rightY);
+  // rightY += 20;
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
@@ -185,23 +185,23 @@ export function generateTemplate3PDF(resume) {
 
   // We'll assume resume.skills is an array of strings, or you might store skill name + proficiency
   // We'll approximate bars by drawing a rect with some fraction filled.
-  const barWidth = 100;
-  resume.skills.slice(0, 5).forEach((skill) => {
-    // skill can be "JavaScript" or "HTML & CSS"
-    doc.text(skill, contentStartX, rightY + 10);
+  // const barWidth = 100;
+  // resume.skills.slice(0, 5).forEach((skill) => {
+  //   // skill can be "JavaScript" or "HTML & CSS"
+  //   doc.text(skill, contentStartX, rightY + 10);
 
-    // Draw a background bar
-    doc.setDrawColor(200);
-    doc.setFillColor(230, 230, 230);
-    doc.rect(contentStartX + 100, rightY, barWidth, 10, "F");
+  //   // Draw a background bar
+  //   doc.setDrawColor(200);
+  //   doc.setFillColor(230, 230, 230);
+  //   doc.rect(contentStartX + 100, rightY, barWidth, 10, "F");
 
-    // You can fill part of the bar to indicate proficiency, e.g. random or a set fraction
-    // For demonstration, let's fill 60%
-    doc.setFillColor(41, 46, 73);
-    doc.rect(contentStartX + 100, rightY, barWidth * 0.6, 10, "F");
+  //   // You can fill part of the bar to indicate proficiency, e.g. random or a set fraction
+  //   // For demonstration, let's fill 60%
+  //   doc.setFillColor(41, 46, 73);
+  //   doc.rect(contentStartX + 100, rightY, barWidth * 0.6, 10, "F");
 
-    rightY += 20;
-  });
+  //   rightY += 20;
+  // });
 
   return doc;
 }

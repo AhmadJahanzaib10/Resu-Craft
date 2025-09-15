@@ -63,11 +63,6 @@ const data = {
           url: "#",
           icon: PlusCircle,
         },
-        {
-          title: "Templates",
-          url: "#",
-          icon: FolderKanban,
-        },
       ],
     },
     {
@@ -85,22 +80,12 @@ const data = {
           url: "#",
           icon: PlusCircle,
         },
-        {
-          title: "Recent",
-          url: "#",
-          icon: FileClock,
-        },
       ],
     },
     {
       title: "Profile",
       url: "#",
       icon: UserCircle,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
     },
   ]
 }
@@ -132,10 +117,10 @@ export function AppSidebar({ onSectionChange, ...props }) {
       </SidebarContent>
       <SidebarFooter className="bg-transparent border-t border-gray-100/50">
         <div className="p-4 space-y-2">
-          <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors">
+          {/* <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors">
             <PlusCircle className="h-5 w-5" />
             <span className="font-medium">New Project</span>
-          </button>
+          </button> */}
           {/* <button className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/10 to-primary/5 text-primary rounded-lg hover:from-primary/20 hover:to-primary/10 transition-colors">
             <Sparkles className="h-5 w-5" />
             <span className="font-medium">Upgrade to Pro</span>
