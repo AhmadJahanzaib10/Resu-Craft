@@ -142,7 +142,8 @@ export function generateTemplate3PDF(resume) {
       pageWidth - contentStartX - 40
     );
     respLines.forEach((line) => {
-      doc.text(line, contentStartX, rightY);
+      doc.circle(contentStartX, rightY - 4, 2, "F"); // bullet
+      doc.text(line, contentStartX + 10, rightY);
       rightY += lineHeight;
     });
     rightY += 15; // extra gap after each job

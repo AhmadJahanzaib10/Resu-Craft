@@ -145,7 +145,8 @@ export function generateTemplate4PDF(resume) {
       pageWidth - marginLeft * 2
     );
     respLines.forEach((line) => {
-      doc.text(line, marginLeft, currentY);
+      doc.circle(marginLeft, currentY - 4, 2, "F"); // bullet
+      doc.text(line, marginLeft + 10, currentY);
       currentY += lineHeight;
     });
     currentY += 25; // Increased from 15 to 25 for more space between experiences

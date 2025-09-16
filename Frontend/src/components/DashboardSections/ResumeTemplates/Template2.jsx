@@ -123,7 +123,8 @@ export function generateTemplate2PDF(resume) {
         // Responsibilities as paragraph
         const respLines = doc.splitTextToSize(exp.responsibilities || "Lorem ipsum...", 500);
         respLines.forEach((line) => {
-            doc.text(line, marginLeft, currentY);
+            doc.circle(marginLeft, currentY - 4, 2, "F"); // bullet
+            doc.text(line, marginLeft + 10, currentY);
             currentY += lineSpacing;
         });
         currentY += lineSpacing;
