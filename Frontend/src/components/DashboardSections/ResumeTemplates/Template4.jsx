@@ -144,9 +144,14 @@ export function generateTemplate4PDF(resume) {
       exp.responsibilities || "Describe achievements, tasks, etc...",
       pageWidth - marginLeft * 2
     );
-    respLines.forEach((line) => {
-      doc.circle(marginLeft, currentY - 4, 2, "F"); // bullet
-      doc.text(line, marginLeft + 10, currentY);
+    respLines.forEach((line, i) => {
+      if(i == 0){
+        doc.circle(marginLeft, currentY - 4, 2, "F"); // bullet
+        doc.text(line, marginLeft + 10, currentY);
+      }
+      else{
+        doc.text(line, marginLeft + 10, currentY);
+      }
       currentY += lineHeight;
     });
     currentY += 25; // Increased from 15 to 25 for more space between experiences

@@ -141,9 +141,15 @@ export function generateTemplate3PDF(resume) {
       exp.responsibilities || "Describe your role and achievements...",
       pageWidth - contentStartX - 40
     );
-    respLines.forEach((line) => {
-      doc.circle(contentStartX, rightY - 4, 2, "F"); // bullet
-      doc.text(line, contentStartX + 10, rightY);
+    console.log(respLines)
+    respLines.forEach((line, i) => {
+      if(i == 0){
+        doc.circle(contentStartX, rightY - 4, 2, "F"); // bullet
+        doc.text(line, contentStartX + 10, rightY);
+      }
+      else{
+        doc.text(line, contentStartX + 10, rightY);
+      }
       rightY += lineHeight;
     });
     rightY += 15; // extra gap after each job
