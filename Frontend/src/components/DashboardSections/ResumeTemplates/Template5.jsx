@@ -106,7 +106,7 @@ export function generateTemplate5PDF(resume) {
     doc.setFont("helvetica", "normal");
     doc.text(exp.company || "Company Name, City, State", marginLeft, currentY);
     currentY += lineHeight;
-    
+
     // Add a small line break after company name
     currentY += 5;
 
@@ -117,13 +117,8 @@ export function generateTemplate5PDF(resume) {
       "List of achievements, responsibilities, etc. Use bullet points or paragraphs...";
     const bulletLines = doc.splitTextToSize(respText, pageWidth - marginLeft * 2 - 20);
     bulletLines.forEach((line, i) => {
-      // We'll place a bullet on the first line, then indent subsequent lines
-      if (i === 0) {
-        doc.circle(marginLeft, currentY - 3, 2, "F"); // bullet
-        doc.text(line, marginLeft + 10, currentY);
-      } else {
-        doc.text(line, marginLeft + 10, currentY);
-      }
+      doc.circle(marginLeft, currentY - 3, 2, "F"); // bullet
+      doc.text(line, marginLeft + 10, currentY);
       currentY += lineHeight;
     });
     currentY += 15;

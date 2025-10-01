@@ -260,7 +260,6 @@ const ResumeBuilder = () => {
         "skills": ["JavaScript", "React", "Node.js", "Agile Methodologies", "Project Management"]
       }
     `;
-    console.log("New Gemini Prompt:", prompt);
 
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
@@ -268,7 +267,6 @@ const ResumeBuilder = () => {
 
     try {
       const result = await model.generateContent(prompt);
-      console.log("Full Gemini Result:", JSON.stringify(result, null, 2));
 
       // Access text from result.response.candidates[0].content.parts[0].text
       let responseText =
@@ -283,7 +281,6 @@ const ResumeBuilder = () => {
       if (responseText.startsWith("```")) {
         responseText = responseText.replace(/```json|```/g, "").trim();
       }
-      console.log("Cleaned Gemini Response:", responseText);
 
       const geminiOutput = JSON.parse(responseText);
 
@@ -1405,7 +1402,7 @@ const ResumeBuilder = () => {
                   }`}
                   onClick={() => setResume({ ...resume, template: tpl })}
                 >
-                  <div className="aspect-[3/4] relative">
+                  <div className="aspect-[3/4] template-card relative">
                     <img
                       src={templateImages[tpl]}
                       alt={tpl}
@@ -1418,11 +1415,6 @@ const ResumeBuilder = () => {
                           : "hover:bg-black/5"
                       }`}
                     ></div>
-                  </div>
-                  <div className="py-2 px-3 bg-white text-center">
-                    <p className="text-sm font-medium text-gray-700">
-                      {tpl.replace("template", "Template ")}
-                    </p>
                   </div>
                 </div>
               ))}

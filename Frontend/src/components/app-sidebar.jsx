@@ -100,14 +100,6 @@ export function AppSidebar({ onSectionChange, ...props }) {
       <SidebarHeader className="bg-transparent border-b border-gray-100/50">
         <div className="flex items-center justify-between px-4 py-3">
           <TeamSwitcher teams={data.teams} />
-          <div className="flex items-center gap-2">
-            <button className="p-2 rounded-lg hover:bg-gray-100/50 transition-colors">
-              <Search className="h-5 w-5 text-gray-600" />
-            </button>
-            <button className="p-2 rounded-lg hover:bg-gray-100/50 transition-colors">
-              <Bell className="h-5 w-5 text-gray-600" />
-            </button>
-          </div>
         </div>
       </SidebarHeader>
       <SidebarContent className="bg-transparent">

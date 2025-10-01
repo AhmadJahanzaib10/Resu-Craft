@@ -26,10 +26,10 @@ import Settings from "@/components/DashboardSections/Settings";
 import CreateCover from "@/components/DashboardSections/CreateCover";
 import { auth } from "@/Firebase/firebase.config";
 
-function DashContent() {
+function DashContent({onSectionChange}) {
   return (
     <div>
-      <Dash />
+      <Dash onSectionChange={onSectionChange} />
     </div>
   )
 }
@@ -110,7 +110,7 @@ const Dashboard = () => {
   let mainContent;
   switch (activeSection) {
     case "Dashboard":
-      mainContent = <DashContent />;
+      mainContent = <DashContent onSectionChange={handleSectionChange}/>;
       break;
     case "Resume Builder":
       mainContent = <ResumeBuilderContent setActiveSection={handleSectionChange} />;

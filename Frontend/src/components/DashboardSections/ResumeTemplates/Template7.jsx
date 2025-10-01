@@ -180,6 +180,7 @@ export function generateTemplate7PDF(resume) {
           respPoints = exp.responsibilities;
         }
       }
+      console.log(respPoints)
 
       respPoints.forEach(point => {
         if (point.trim()) {
@@ -188,6 +189,8 @@ export function generateTemplate7PDF(resume) {
           const bulletPoint = point.trim();
           const wrappedLines = doc.splitTextToSize(bulletPoint, pageWidth - marginLeft * 2 - 20);
           wrappedLines.forEach((line, i) => {
+            doc.setFillColor(...bulletColor);
+            doc.circle(marginLeft, currentY - 3, 2, "F"); // Green bullet
             doc.text(line, marginLeft + 10, currentY);
             currentY += lineHeight;
           });

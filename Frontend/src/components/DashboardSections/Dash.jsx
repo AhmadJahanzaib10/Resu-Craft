@@ -1,7 +1,7 @@
 import useAuth from "@/hooks/useAuth";
 import React from "react";
 
-function Dash() {
+function Dash({onSectionChange}) {
   const { user } = useAuth();
   return (
     <div className="mt-36 w-4/5 lg:w-2/3 mx-auto text-center">
@@ -26,8 +26,7 @@ function Dash() {
       . Keep all your career documents in one place — so you’re always ready
       for the next big opportunity 🚀
     </p>
-
-    
+    <button className="btn mt-3 text-white" style={{background: "#24356e"}} onClick={()=>{onSectionChange("Create New")}}>Build My Resume Now</button>
   </div>
 </div>
 

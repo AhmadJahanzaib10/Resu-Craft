@@ -274,21 +274,15 @@ export function generateTemplate6PDF(resume) {
         // Add each responsibility as a bullet point
         respPoints.forEach(point => {
           if (point.trim()) {
-            // Format with bullet
-            const bulletPoint = `• ${point.trim()}`;
             // Use slightly smaller font for work experience bullet points to fit better
             doc.setFontSize(10);
-            const wrappedLines = doc.splitTextToSize(bulletPoint, leftColumnWidth - 5);
+            const wrappedLines = doc.splitTextToSize(point.trim(), leftColumnWidth - 5);
             
-            // First line with bullet
-            doc.text(wrappedLines[0], leftMargin, leftY);
-            leftY += lineHeight - 3;
-            
-            // Subsequent lines with proper indentation (if wrapped)
-            for (let i = 1; i < wrappedLines.length; i++) {
-              doc.text(wrappedLines[i], leftMargin + 10, leftY); // Indent continuation lines
+              // Draw every line with a bullet
+            wrappedLines.forEach(line => {
+              doc.text(`• ${line}`, leftMargin, leftY);
               leftY += lineHeight - 3;
-            }
+            });
             // Reset font size back to normal
             doc.setFontSize(11);
           }

@@ -95,7 +95,7 @@ export function generateTemplate3PDF(resume) {
     doc.setTextColor(...headingColor);
     doc.text("LANGUAGES", leftMargin, currentY);
     currentY += lineHeight;
-    
+
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...bodyTextColor);
     resume.additionalContent.languages.forEach((lang) => {
@@ -143,13 +143,9 @@ export function generateTemplate3PDF(resume) {
     );
     console.log(respLines)
     respLines.forEach((line, i) => {
-      if(i == 0){
-        doc.circle(contentStartX, rightY - 4, 2, "F"); // bullet
-        doc.text(line, contentStartX + 10, rightY);
-      }
-      else{
-        doc.text(line, contentStartX + 10, rightY);
-      }
+      doc.circle(contentStartX, rightY - 4, 2, "F"); // bullet
+      doc.text(line, contentStartX + 10, rightY);
+
       rightY += lineHeight;
     });
     rightY += 15; // extra gap after each job

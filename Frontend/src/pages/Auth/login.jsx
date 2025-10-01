@@ -57,7 +57,6 @@ const Login = () => {
   const loginWithGoogle = async () => {
     signUpGoogleUser()
             .then(res => {
-                console.log(res)
                 Swal.fire({
                     position: "top",
                     icon: "success",

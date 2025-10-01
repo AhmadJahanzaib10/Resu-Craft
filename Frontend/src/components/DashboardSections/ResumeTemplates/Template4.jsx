@@ -63,7 +63,7 @@ export function generateTemplate4PDF(resume) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...bodyTextColor);
-  const summary = resume.summary || 
+  const summary = resume.summary ||
     "Digital Marketing Specialist with 4+ years of experience in online marketing, branding, and business strategy...";
   const summaryLines = doc.splitTextToSize(summary, pageWidth - marginLeft * 2);
   summaryLines.forEach((line) => {
@@ -87,9 +87,9 @@ export function generateTemplate4PDF(resume) {
 
   // We'll place each skill in a "pill." For simplicity, we just draw a rounded rect behind each skill text.
   // We'll assume resume.skills is an array of strings. If empty, use sample data.
-  const skillList = resume.skills.length > 0 ? resume.skills : 
+  const skillList = resume.skills.length > 0 ? resume.skills :
     ["Digital Data Analytics/Marketing", "Adobe Photoshop", "Adobe Illustrator", "Google Analytics", "HTML & CSS"];
-  
+
   let currentX = marginLeft;
   const pillHeight = 18;
   const maxPillWidth = pageWidth - marginLeft * 2;
@@ -105,7 +105,7 @@ export function generateTemplate4PDF(resume) {
     doc.setFillColor(240, 240, 240);
     doc.roundedRect(currentX, currentY - pillHeight + 2, skillWidth, pillHeight, 8, 8, "F");
     doc.setTextColor(...bodyTextColor);
-    doc.text(skill, currentX + 10, currentY - 4); 
+    doc.text(skill, currentX + 10, currentY - 4);
     currentX += skillWidth + 10;
   });
   currentY += 30;
@@ -127,31 +127,26 @@ export function generateTemplate4PDF(resume) {
   resume.workExperience.forEach((exp) => {
     // e.g. "May 2019 - Present" on the right
     if (exp.duration) {
-      doc.text(exp.duration, pageWidth - marginLeft - 120, currentY); 
+      doc.text(exp.duration, pageWidth - marginLeft - 120, currentY);
     }
     // Job Title
     doc.setFont("helvetica", "bold");
     doc.text(exp.jobTitle || "Job Title", marginLeft, currentY);
     currentY += lineHeight + 5; // Added 5pt extra spacing after job title
-    
+
     // Company
     doc.setFont("helvetica", "normal");
     doc.text(exp.company || "Company, City, State", marginLeft, currentY);
     currentY += lineHeight + 8; // Added 8pt extra spacing after company
-    
+
     // Responsibilities
     const respLines = doc.splitTextToSize(
       exp.responsibilities || "Describe achievements, tasks, etc...",
       pageWidth - marginLeft * 2
     );
     respLines.forEach((line, i) => {
-      if(i == 0){
-        doc.circle(marginLeft, currentY - 4, 2, "F"); // bullet
-        doc.text(line, marginLeft + 10, currentY);
-      }
-      else{
-        doc.text(line, marginLeft + 10, currentY);
-      }
+      doc.circle(marginLeft, currentY - 4, 2, "F"); // bullet
+      doc.text(line, marginLeft + 10, currentY);
       currentY += lineHeight;
     });
     currentY += 25; // Increased from 15 to 25 for more space between experiences
