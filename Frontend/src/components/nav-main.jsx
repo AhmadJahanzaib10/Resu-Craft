@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 
 import { ChevronRight, ChevronDown } from "lucide-react";
 import {
@@ -16,7 +17,23 @@ import {
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 
+import { useSidebar } from "@/components/ui/sidebar";
+
 export function NavMain({ items, onSectionChange, activeSection }) {
+  const { toggleSidebar } = useSidebar();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768) // default check
+
+  useEffect(() => {
+    // Update `isMobile` on resize
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    window.addEventListener("resize", handleResize)
+    return () => {
+      window.removeEventListener("resize", handleResize)
+    }
+  }, [])
   return (
     <SidebarGroup>
       <SidebarMenu>
@@ -42,7 +59,11 @@ export function NavMain({ items, onSectionChange, activeSection }) {
                           ? "bg-primary/10 text-primary shadow-sm"
                           : "text-gray-600 hover:bg-gray-100/50 hover:text-gray-900"
                       }`}
-                    onClick={() => !item.items && onSectionChange(item.title)}
+                      onClick={() => {
+                        if (!item.items) {
+                          onSectionChange(item.title);
+                        }
+                      }}
                   >
                     {item.icon && (
                       <item.icon className={`size-5 ${(isActive || isSubItemActive) ? 'text-primary' : 'text-gray-500'}`} />
@@ -71,7 +92,12 @@ export function NavMain({ items, onSectionChange, activeSection }) {
                                     ? "bg-primary/10 text-primary shadow-sm"
                                     : "text-gray-600 hover:bg-gray-100/50 hover:text-gray-900"
                                 }`}
-                              onClick={() => onSectionChange(subItem.title)}
+                                onClick={() => {
+                                  onSectionChange(subItem.title);
+                                  if (isMobile) {
+                                    toggleSidebar(); // ✅ only close on mobile
+                                  }
+                                }}
                             >
                               {subItem.icon && (
                                 <subItem.icon className={`size-4 ${

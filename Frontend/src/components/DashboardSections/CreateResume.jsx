@@ -1376,7 +1376,7 @@ const ResumeBuilder = () => {
         );
       case 6:
         return (
-          <div className="max-w-[1000px] w-[1000px] mx-auto">
+          <div className="max-w-[1000px] w-[1000px] mob-maxw-100 mx-auto">
             <h3 className="text-xl font-medium text-primary mb-2 pb-2 border-b">
               Step 6: Template Selection
             </h3>
@@ -1384,7 +1384,7 @@ const ResumeBuilder = () => {
               Choose a template design for your resume.
             </p>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 template-grid">
               {[
                 "template2",
                 "template3",

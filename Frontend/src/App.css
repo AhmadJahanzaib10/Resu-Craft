@@ -159,8 +159,14 @@ body {
     font-family: var(--font-pregular);
 }
 
-@media screen and (max-width: 576px) {
-    .template-card img{
-        width: 80% !important;
+@media screen and (max-width: 768px) {
+    .mob-maxw-100{
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    .template-grid{
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
     }
 }
