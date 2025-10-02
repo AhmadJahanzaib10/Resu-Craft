@@ -396,7 +396,6 @@ const ResumeBuilder = () => {
         ]
       }
     `;
-    console.log("Optimized Gemini Prompt:", prompt);
 
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
@@ -404,7 +403,6 @@ const ResumeBuilder = () => {
 
     try {
       const result = await model.generateContent(prompt);
-      console.log("Full Gemini Result:", JSON.stringify(result, null, 2));
 
       // Access the response text from result.response.candidates[0].content.parts[0].text
       let responseText =
@@ -419,9 +417,10 @@ const ResumeBuilder = () => {
       if (responseText.startsWith("```")) {
         responseText = responseText.replace(/```json|```/g, "").trim();
       }
-      console.log("Cleaned Gemini Response:", responseText);
 
       const geminiOutput = JSON.parse(responseText);
+      const responsibiltiesString = geminiOutput.workExperience[0].responsibilities.join("\n")
+      geminiOutput.workExperience[0].responsibilities = responsibiltiesString;
 
       // Update the resume state with the optimized values from Gemini
       // setResume((prev) => ({
