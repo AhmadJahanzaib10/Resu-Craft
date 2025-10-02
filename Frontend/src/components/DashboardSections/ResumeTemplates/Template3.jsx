@@ -136,17 +136,30 @@ export function generateTemplate3PDF(resume) {
     doc.text(exp.company || "Company Name", contentStartX, rightY);
     rightY += lineHeight;
 
-    // Responsibilities
-    const respLines = doc.splitTextToSize(
-      exp.responsibilities || "Describe your role and achievements...",
-      pageWidth - contentStartX - 40
-    );
-    console.log(respLines)
-    respLines.forEach((line, i) => {
-      doc.circle(contentStartX, rightY - 4, 2, "F"); // bullet
-      doc.text(line, contentStartX + 10, rightY);
+    const splitPoints = (exp.responsibilities || "Describe your role and achievements...")
+      .split(/\r?\n/);
 
-      rightY += lineHeight;
+    splitPoints.forEach(point => {
+      if (point.trim()) {
+        // Wrap each responsibility line within the available width
+        const wrappedLines = doc.splitTextToSize(
+          point.trim(),
+          pageWidth - contentStartX - 40
+        );
+
+        wrappedLines.forEach((line, idx) => {
+          if (idx === 0) {
+            // First wrapped line → add bullet + text
+            doc.circle(contentStartX, rightY - 4, 2, "F");
+            doc.text(line, contentStartX + 10, rightY);
+          } else {
+            // Continuation lines → only text (aligned with first line text)
+            doc.text(line, contentStartX + 10, rightY);
+          }
+
+          rightY += lineHeight;
+        });
+      }
     });
     rightY += 15; // extra gap after each job
   });

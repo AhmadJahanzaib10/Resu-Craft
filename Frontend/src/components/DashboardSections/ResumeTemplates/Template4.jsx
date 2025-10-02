@@ -140,15 +140,30 @@ export function generateTemplate4PDF(resume) {
     currentY += lineHeight + 8; // Added 8pt extra spacing after company
 
     // Responsibilities
-    const respLines = doc.splitTextToSize(
-      exp.responsibilities || "Describe achievements, tasks, etc...",
-      pageWidth - marginLeft * 2
-    );
-    respLines.forEach((line, i) => {
-      doc.circle(marginLeft, currentY - 4, 2, "F"); // bullet
+const splitPoints = (exp.responsibilities || "Describe achievements, tasks, etc...")
+.split(/\r?\n/);
+
+splitPoints.forEach(point => {
+if (point.trim()) {
+  // Wrap text to fit available width
+  const wrappedLines = doc.splitTextToSize(
+    point.trim(),
+    pageWidth - marginLeft * 2
+  );
+
+  wrappedLines.forEach((line, idx) => {
+    if (idx === 0) {
+      // First wrapped line → bullet + text
+      doc.circle(marginLeft, currentY - 4, 2, "F");
       doc.text(line, marginLeft + 10, currentY);
-      currentY += lineHeight;
-    });
+    } else {
+      // Continuation lines → only text, aligned under first line
+      doc.text(line, marginLeft + 10, currentY);
+    }
+    currentY += lineHeight;
+  });
+}
+});
     currentY += 25; // Increased from 15 to 25 for more space between experiences
   });
 

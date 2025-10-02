@@ -258,37 +258,48 @@ export function generateTemplate6PDF(resume) {
       
       // Use bullet points for responsibilities if available
       if (exp.responsibilities) {
-        // Split responsibilities into individual points if they're in a single string
         let respPoints = [];
-        if (typeof exp.responsibilities === 'string') {
-          // Try to split by common delimiters
-          respPoints = exp.responsibilities.split(/[•\-\.\;\,]\s+/).filter(point => point.trim().length > 0);
+      
+        if (typeof exp.responsibilities === "string") {
+          // Try to split by common delimiters (•, -, ., ;, ,)
+          respPoints = exp.responsibilities
+            .split(/\r?\n/)
+            .filter(point => point.trim().length > 0);
+      
           if (respPoints.length <= 1) {
-            // If no good split found, split by sentences
-            respPoints = exp.responsibilities.split(/\.\s+/).filter(point => point.trim().length > 0);
+            // If no good split found, fall back to splitting by sentences
+            respPoints = exp.responsibilities
+              .split(/\.\s+/)
+              .filter(point => point.trim().length > 0);
           }
         } else if (Array.isArray(exp.responsibilities)) {
           respPoints = exp.responsibilities;
         }
-        
-        // Add each responsibility as a bullet point
+      
+        // Add each responsibility as bullet point
         respPoints.forEach(point => {
           if (point.trim()) {
-            // Use slightly smaller font for work experience bullet points to fit better
+            // Slightly smaller font for responsibilities
             doc.setFontSize(10);
+      
             const wrappedLines = doc.splitTextToSize(point.trim(), leftColumnWidth - 5);
-            
-              // Draw every line with a bullet
-            wrappedLines.forEach(line => {
-              doc.text(`• ${line}`, leftMargin, leftY);
+      
+            wrappedLines.forEach((line, idx) => {
+              if (idx === 0) {
+                // First wrapped line → bullet + text
+                doc.text(`• ${line}`, leftMargin, leftY);
+              } else {
+                // Continuation lines → only text (no bullet, aligned with first line)
+                doc.text(line, leftMargin + 6, leftY);
+              }
               leftY += lineHeight - 3;
             });
+      
             // Reset font size back to normal
             doc.setFontSize(11);
           }
         });
       }
-      
       leftY += 15; // Space between experiences
     });
   } else {

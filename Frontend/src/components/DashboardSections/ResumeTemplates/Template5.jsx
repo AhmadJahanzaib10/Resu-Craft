@@ -111,15 +111,34 @@ export function generateTemplate5PDF(resume) {
     currentY += 5;
 
     // Responsibilities in bullet points
-    // We'll split by newline or just treat the entire string as one bullet
     const respText =
       exp.responsibilities ||
       "List of achievements, responsibilities, etc. Use bullet points or paragraphs...";
-    const bulletLines = doc.splitTextToSize(respText, pageWidth - marginLeft * 2 - 20);
-    bulletLines.forEach((line, i) => {
-      doc.circle(marginLeft, currentY - 3, 2, "F"); // bullet
-      doc.text(line, marginLeft + 10, currentY);
-      currentY += lineHeight;
+
+    // Split responsibilities by newlines
+    const splitPoints = respText.split(/\r?\n/);
+
+    splitPoints.forEach(point => {
+      if (point.trim()) {
+        // Wrap each responsibility to fit page width
+        const wrappedLines = doc.splitTextToSize(
+          point.trim(),
+          pageWidth - marginLeft * 2 - 20
+        );
+
+        wrappedLines.forEach((line, idx) => {
+          if (idx === 0) {
+            // First line → bullet + text
+            doc.circle(marginLeft, currentY - 3, 2, "F");
+            doc.text(line, marginLeft + 10, currentY);
+          } else {
+            // Continuation lines → only text, no bullet
+            doc.text(line, marginLeft + 10, currentY);
+          }
+
+          currentY += lineHeight;
+        });
+      }
     });
     currentY += 15;
   });

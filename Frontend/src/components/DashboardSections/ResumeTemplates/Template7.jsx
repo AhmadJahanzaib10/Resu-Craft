@@ -170,28 +170,34 @@ export function generateTemplate7PDF(resume) {
       // Responsibilities in bullet points
       let respPoints = [];
       if (exp.responsibilities) {
-        if (typeof exp.responsibilities === 'string') {
-          // Split by common delimiters or sentences
-          respPoints = exp.responsibilities.split(/[•\-\.\;\,]\s+/).filter(point => point.trim().length > 0);
-          if (respPoints.length <= 1) {
-            respPoints = exp.responsibilities.split(/\.\s+/).filter(point => point.trim().length > 0);
-          }
+        if (typeof exp.responsibilities === "string") {
+          // ✅ Split only by line breaks
+          respPoints = exp.responsibilities
+            .split(/\r?\n/)
+            .filter(point => point.trim().length > 0);
         } else if (Array.isArray(exp.responsibilities)) {
           respPoints = exp.responsibilities;
         }
       }
-      console.log(respPoints)
 
       respPoints.forEach(point => {
         if (point.trim()) {
           doc.setFillColor(...bulletColor);
-          doc.circle(marginLeft, currentY - 3, 2, "F"); // Green bullet
           const bulletPoint = point.trim();
-          const wrappedLines = doc.splitTextToSize(bulletPoint, pageWidth - marginLeft * 2 - 20);
+          const wrappedLines = doc.splitTextToSize(
+            bulletPoint,
+            pageWidth - marginLeft * 2 - 20
+          );
+
           wrappedLines.forEach((line, i) => {
-            doc.setFillColor(...bulletColor);
-            doc.circle(marginLeft, currentY - 3, 2, "F"); // Green bullet
-            doc.text(line, marginLeft + 10, currentY);
+            if (i === 0) {
+              // First line → draw bullet + text
+              doc.circle(marginLeft, currentY - 3, 2, "F"); // Green bullet
+              doc.text(line, marginLeft + 10, currentY);
+            } else {
+              // Continuation lines → only text (no extra bullet)
+              doc.text(line, marginLeft + 10, currentY);
+            }
             currentY += lineHeight;
           });
         }

@@ -119,14 +119,27 @@ export function generateTemplate2PDF(resume) {
         doc.setFont("helvetica", "normal");
         doc.text(exp.company || "Company Name, Location", marginLeft, currentY);
         currentY += lineSpacing;
+        // Split responsibilities by new line
+        const splitPoints = (exp.responsibilities || "Lorem ipsum...").split(/\r?\n/);
+        console.log("Split Points are :", splitPoints)
 
-        // Responsibilities as paragraph
-        const respLines = doc.splitTextToSize(exp.responsibilities || "Lorem ipsum...", 500);
-        console.log(respLines)
-        respLines.forEach((line, i) => {
-                doc.circle(marginLeft, currentY - 4, 2, "F"); // bullet
-                doc.text(line, marginLeft + 10, currentY);
-            currentY += lineSpacing;
+        splitPoints.forEach(point => {
+            if (point.trim()) {
+                // Wrap text to fit within page width
+                const wrappedLines = doc.splitTextToSize(point.trim(), 500);
+                console.log("Wrapped Lines: ", wrappedLines)
+                wrappedLines.forEach((line, idx) => {
+                    if (idx === 0) {
+                        // First line → draw bullet + text
+                        doc.circle(marginLeft, currentY - 4, 2, "F");
+                        doc.text(line, marginLeft + 10, currentY);
+                    } else {
+                        // Wrapped lines → only text (no bullet)
+                        doc.text(line, marginLeft + 10, currentY);
+                    }
+                    currentY += lineSpacing;
+                });
+            }
         });
         currentY += lineSpacing;
     });
