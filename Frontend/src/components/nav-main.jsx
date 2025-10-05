@@ -62,6 +62,10 @@ export function NavMain({ items, onSectionChange, activeSection }) {
                       onClick={() => {
                         if (!item.items) {
                           onSectionChange(item.title);
+                          // ✅ Close sidebar on mobile for Dashboard & Profile
+    if (isMobile) {
+      toggleSidebar();
+    }
                         }
                       }}
                   >
