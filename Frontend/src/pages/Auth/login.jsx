@@ -18,7 +18,7 @@ const LoginSchema = Yup.object().shape({
 const Login = () => {
   // const [error, setError] = useState("");
   const navigate = useNavigate();
-   const { logInUser,signUpGoogleUser, user,loading } = useAuth()
+   const { logInUser,signUpGoogleUser, user,loading, setLoading } = useAuth()
 
 
 
@@ -32,27 +32,42 @@ const Login = () => {
     
   }, [navigate]);
 
+  
 
   //edited by developer
   const handleSubmit = async (values, { setSubmitting }) => {
-    const {email,password}=values;
+    const { email, password } = values;
+  
     try {
-      logInUser(email, password)
-            .then((res) => {
-                console.log(res)
-                Swal.fire({
-                    title: "Logged in",
-                    icon: "success",
-                });
-                navigate("/dashboard");
-            })
-            .catch(error => console.log(error))
-     
+      // Wait for the login to complete
+      const res = await logInUser(email, password);
+  
+      console.log(res);
+      Swal.fire({
+        title: "Logged in",
+        icon: "success",
+      });
+  
+      navigate("/dashboard");
+    } catch (error) {
+      console.log(error);
+  
+      // Handle Firebase error codes
+      let message = "Something went wrong!";
+      if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
+        message = "Incorrect email or password. Please try again.";
+      } 
+
+      Swal.fire({
+        title: message,
+        icon: "error",
+      });
     } finally {
-      
       setSubmitting(false);
+      setLoading(false);
     }
   };
+  
   //edited by developer
   const loginWithGoogle = async () => {
     signUpGoogleUser()
