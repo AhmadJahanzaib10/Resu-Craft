@@ -21,15 +21,12 @@ const ResumeBuilder = ({ setActiveSection }) => {
   const [savedResumes, setSavedResumes] = useState([]);
   const [selectedResume, setSelectedResume] = useState(null); // for modal
 
-  const handleDownloadPDF = () => {
-    if (selected_pdf_link) {
-      window.open(selected_pdf_link, "_blank");
-    }
-    set_selected_pdf_link(null);
+  const downloadPDF = (pdfURL) => {
+      window.open(pdfURL, "_blank");
   };
 
   // Check before Downloading if user has subscription
-  const handleDownload = async () => {
+  const handleDownload = async (pdfURL) => {
     try {
       // 2️⃣ Get user subscription data from Realtime DB
       const userRef = dbRef(db, `users/${user.uid}`);
@@ -78,7 +75,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
         });
         return;
       }
-      downloadPDF();
+      downloadPDF(pdfURL);
     } catch (error) {
       console.error("Error verifying subscription:", error);
       await Swal.fire({
@@ -212,7 +209,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
                     </span>
                     <div className="flex gap-2">
                       <button
-                        onClick={handleDownload} // call your function here
+                        onClick={() => handleDownload(item.url)} // call your function here
                         className="text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-full hover:bg-blue-100"
                         title="Download Resume"
                       >
