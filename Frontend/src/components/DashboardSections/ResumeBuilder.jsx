@@ -21,6 +21,13 @@ const ResumeBuilder = ({ setActiveSection }) => {
   const [savedResumes, setSavedResumes] = useState([]);
   const [selectedResume, setSelectedResume] = useState(null); // for modal
 
+  const handleDownloadPDF = () => {
+    if (selected_pdf_link) {
+      window.open(selected_pdf_link, "_blank");
+    }
+    set_selected_pdf_link(null);
+  };
+
   // Check before Downloading if user has subscription
   const handleDownload = async () => {
     try {
