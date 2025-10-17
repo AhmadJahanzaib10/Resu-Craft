@@ -3,6 +3,7 @@ import { Check, Zap, Crown, Calendar, Shield, CheckCircle2, Clock, CreditCard } 
 import {ref , onValue } from "firebase/database";
 import { db } from '@/Firebase/firebase.config';
 import useAuth from "@/hooks/useAuth";
+import '../../plan.css';
 
 export default function Plan() {
   const { user } = useAuth();
@@ -203,7 +204,7 @@ export default function Plan() {
 
                 {plan.savings && (
                   <div className="absolute top-4 left-4">
-                    <span className="px-3 py-2 bg-green-500 rounded-lg text-xs font-bold text-white">
+                    <span className="px-3 py-2 bg-green-500 rounded-lg text-xs font-bold text-white save-txt">
                       Save {plan.savings}
                     </span>
                   </div>
