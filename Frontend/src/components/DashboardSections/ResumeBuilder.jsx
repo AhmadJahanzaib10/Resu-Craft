@@ -2,9 +2,14 @@ import { useEffect, useState } from "react";
 import { auth, storage } from "@/Firebase/firebase.config";
 import { deleteObject, getDownloadURL, listAll, ref } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
+import { ref as dbRef, get, update } from "firebase/database";
+import { db } from "@/Firebase/firebase.config";
 import Payment from "@/pages/Payment/Payment";
+import useAuth from "@/hooks/useAuth";
+import Swal from "sweetalert2";
 
 const ResumeBuilder = ({ setActiveSection }) => {
+  const {user} = useAuth();
   const navigate = useNavigate();
   const [selected_pdf_link, set_selected_pdf_link] = useState(null);
 
@@ -15,6 +20,68 @@ const ResumeBuilder = ({ setActiveSection }) => {
 
   const [savedResumes, setSavedResumes] = useState([]);
   const [selectedResume, setSelectedResume] = useState(null); // for modal
+
+  // Check before Downloading if user has subscription
+  const handleDownload = async () => {
+    try {
+      // 2️⃣ Get user subscription data from Realtime DB
+      const userRef = dbRef(db, `users/${user.uid}`);
+      const snapshot = await get(userRef);
+
+      if (!snapshot.exists()) {
+        await Swal.fire({
+          icon: "warning",
+          title: "No Subscription Found",
+          text: "Please subscribe first to download the PDF.",
+          confirmButtonColor: "#3085d6",
+        });
+        return;
+      }
+
+      const subscription = snapshot.val();
+      const sub = subscription.subscription; // shorthand
+
+      if (!sub || !sub.startDate || !sub.endDate || sub.status !== "active") {
+        // No subscription or invalid
+        await Swal.fire({
+          icon: "warning",
+          title: "No Subscription Found",
+          text: "Please subscribe first to download the PDF.",
+          confirmButtonColor: "#3085d6",
+        });
+        return;
+      }
+      // Check if subscription expired
+      if (new Date(sub.endDate) <= new Date()) {
+        await update(userRef, {
+          subscription: {
+            plan: "Free",
+            status: "inactive",
+            startDate: null,
+            endDate: null,
+            stripeCustomerId: null,
+            stripeSubscriptionId: null,
+          },
+        });
+        await Swal.fire({
+          icon: "error",
+          title: "Subscription Expired",
+          text: "Your subscription has expired. Please renew to continue.",
+          confirmButtonColor: "#d33",
+        });
+        return;
+      }
+      downloadPDF();
+    } catch (error) {
+      console.error("Error verifying subscription:", error);
+      await Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Could not verify your subscription. Please try again later.",
+        confirmButtonColor: "#d33",
+      });
+    }
+  }
 
   useEffect(() => {
     const fetchResumes = async () => {
@@ -138,10 +205,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
                     </span>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => {
-                          set_selected_pdf_link(item.url);
-                          document.getElementById("my_modal_2").showModal();
-                        }} // call your function here
+                        onClick={handleDownload} // call your function here
                         className="text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-full hover:bg-blue-100"
                         title="Download Resume"
                       >

@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import * as yup from "yup";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref as dbRef, get, update } from "firebase/database";
+import { db } from "@/Firebase/firebase.config";
+import Swal from "sweetalert2";
 // import { auth } from "../../firebase"; // adjust the path to your firebase config file
 import { Plus, ArrowUp, ArrowDown, Sparkles } from "lucide-react";
 
@@ -47,6 +50,7 @@ const personalInfoSchema = yup.object().shape({
 });
 
 const ResumeBuilder = () => {
+  const { user } = useAuth();
   // We now have 8 steps (Step 5 is for Additional Content)
   const [step, setStep] = useState(1);
   const [errorMessage, setErrorMessage] = useState("");
@@ -349,20 +353,20 @@ const ResumeBuilder = () => {
       Given the following resume details:
       - Name: ${baseResume.name}
       - Work Experience: ${JSON.stringify(
-        baseResume.workExperience.map((exp) => ({
-          ...exp,
-          // Combine start and end dates for the prompt
-          duration: `${exp.startDate} - ${exp.endDate}`,
-        }))
-      )}
+      baseResume.workExperience.map((exp) => ({
+        ...exp,
+        // Combine start and end dates for the prompt
+        duration: `${exp.startDate} - ${exp.endDate}`,
+      }))
+    )}
       - Education: ${JSON.stringify(baseResume.education)}
       - Additional Content: ${JSON.stringify(baseResume.additionalContent)}
       - Current Summary: ${baseResume.summary || "No summary provided"}
       - Current Skills: ${JSON.stringify(
-        baseResume.skills.length > 0
-          ? baseResume.skills
-          : ["No skills provided"]
-      )}
+      baseResume.skills.length > 0
+        ? baseResume.skills
+        : ["No skills provided"]
+    )}
       
       Please optimize and create a complete resume.
       Return a valid JSON object with exactly four keys:
@@ -488,6 +492,69 @@ const ResumeBuilder = () => {
     setStep(8);
   };
 
+  // Check before Downloading if user has subscription
+  const handleDownload = async () => {
+    try {
+      // 2️⃣ Get user subscription data from Realtime DB
+      const userRef = dbRef(db, `users/${user.uid}`);
+      const snapshot = await get(userRef);
+
+      if (!snapshot.exists()) {
+        await Swal.fire({
+          icon: "warning",
+          title: "No Subscription Found",
+          text: "Please subscribe first to download the PDF.",
+          confirmButtonColor: "#3085d6",
+        });
+        return;
+      }
+
+      const subscription = snapshot.val();
+      const sub = subscription.subscription; // shorthand
+
+      if (!sub || !sub.startDate || !sub.endDate || sub.status !== "active") {
+        // No subscription or invalid
+        await Swal.fire({
+          icon: "warning",
+          title: "No Subscription Found",
+          text: "Please subscribe first to download the PDF.",
+          confirmButtonColor: "#3085d6",
+        });
+        return;
+      }
+      // Check if subscription expired
+      if (new Date(sub.endDate) <= new Date()) {
+        await update(userRef, {
+          subscription: {
+            plan: "Free",
+            status: "inactive",
+            startDate: null,
+            endDate: null,
+            stripeCustomerId: null,
+            stripeSubscriptionId: null,
+          },
+        });
+        await Swal.fire({
+          icon: "error",
+          title: "Subscription Expired",
+          text: "Your subscription has expired. Please renew to continue.",
+          confirmButtonColor: "#d33",
+        });
+        return;
+      }
+      downloadPDF();
+    } catch (error) {
+      console.error("Error verifying subscription:", error);
+      await Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Could not verify your subscription. Please try again later.",
+        confirmButtonColor: "#d33",
+      });
+    }
+  }
+
+
   // ------------------------
   // PDF Creation with Fixed Section Heights & Section Breaks
   // ------------------------
@@ -537,7 +604,6 @@ const ResumeBuilder = () => {
   // ------------------------
   // Save PDF to Firebase (with confirmation and "already saved" check)
   // ------------------------
-  const { user } = useAuth();
   const savePDFToFirebase = async () => {
     // If already saved, do not save again.
     if (pdfSaved) {
@@ -831,7 +897,7 @@ const ResumeBuilder = () => {
                       Responsibilities
                     </label>
                     {exp.responsibilities &&
-                    Array.isArray(exp.responsibilities) ? (
+                      Array.isArray(exp.responsibilities) ? (
                       <div className="space-y-2">
                         {exp.responsibilities.map((resp, respIndex) => (
                           <div
@@ -1081,11 +1147,10 @@ const ResumeBuilder = () => {
                   disabled={resume.skills.length >= 5}
                 />
                 <button
-                  className={`px-4 flex items-center justify-center ${
-                    resume.skills.length >= 5 || !currentSkill.trim()
+                  className={`px-4 flex items-center justify-center ${resume.skills.length >= 5 || !currentSkill.trim()
                       ? "bg-gray-300 cursor-not-allowed"
                       : "bg-primary hover:bg-primary/90"
-                  } text-white rounded-r-md transition-colors`}
+                    } text-white rounded-r-md transition-colors`}
                   onClick={() => {
                     if (currentSkill.trim() && resume.skills.length < 5) {
                       setResume({
@@ -1177,11 +1242,10 @@ const ResumeBuilder = () => {
                   onChange={(e) => setCurrentLanguage(e.target.value)}
                 />
                 <button
-                  className={`px-4 flex items-center justify-center ${
-                    !currentLanguage.trim()
+                  className={`px-4 flex items-center justify-center ${!currentLanguage.trim()
                       ? "bg-gray-300 cursor-not-allowed"
                       : "bg-primary hover:bg-primary/90"
-                  } text-white rounded-r-md transition-colors`}
+                    } text-white rounded-r-md transition-colors`}
                   onClick={() => {
                     if (currentLanguage.trim()) {
                       setResume({
@@ -1280,13 +1344,12 @@ const ResumeBuilder = () => {
                     disabled={resume.additionalContent.references.length >= 2}
                   />
                   <button
-                    className={`px-4 flex items-center justify-center ${
-                      resume.additionalContent.references.length >= 2 ||
-                      !currentReferenceName.trim() ||
-                      !currentReferenceContact.trim()
+                    className={`px-4 flex items-center justify-center ${resume.additionalContent.references.length >= 2 ||
+                        !currentReferenceName.trim() ||
+                        !currentReferenceContact.trim()
                         ? "bg-gray-300 cursor-not-allowed"
                         : "bg-primary hover:bg-primary/90"
-                    } text-white rounded-r-md transition-colors`}
+                      } text-white rounded-r-md transition-colors`}
                     onClick={() => {
                       if (
                         currentReferenceName.trim() &&
@@ -1394,11 +1457,10 @@ const ResumeBuilder = () => {
               ].map((tpl) => (
                 <div
                   key={tpl}
-                  className={`overflow-hidden rounded-md transition-all duration-200 cursor-pointer ${
-                    resume.template === tpl
+                  className={`overflow-hidden rounded-md transition-all duration-200 cursor-pointer ${resume.template === tpl
                       ? "ring-2 ring-primary scale-[1.02]"
                       : "hover:shadow-md hover:scale-[1.02]"
-                  }`}
+                    }`}
                   onClick={() => setResume({ ...resume, template: tpl })}
                 >
                   <div className="aspect-[3/4] template-card relative">
@@ -1408,11 +1470,10 @@ const ResumeBuilder = () => {
                       className="w-full h-full object-cover"
                     />
                     <div
-                      className={`absolute inset-0 ${
-                        resume.template === tpl
+                      className={`absolute inset-0 ${resume.template === tpl
                           ? "bg-primary/10"
                           : "hover:bg-black/5"
-                      }`}
+                        }`}
                     ></div>
                   </div>
                 </div>
@@ -1522,8 +1583,8 @@ const ResumeBuilder = () => {
                             Work Experience:
                           </h4>
                           {resume.workExperience &&
-                          resume.workExperience.length > 0 &&
-                          resume.workExperience[0].jobTitle ? (
+                            resume.workExperience.length > 0 &&
+                            resume.workExperience[0].jobTitle ? (
                             <div className="space-y-2">
                               {resume.workExperience.map((exp, index) => (
                                 <div key={index} className="text-sm">
@@ -1548,8 +1609,8 @@ const ResumeBuilder = () => {
                             Education:
                           </h4>
                           {resume.education &&
-                          resume.education.length > 0 &&
-                          resume.education[0].school ? (
+                            resume.education.length > 0 &&
+                            resume.education[0].school ? (
                             <div className="space-y-2">
                               {resume.education.map((edu, index) => (
                                 <div key={index} className="text-sm">
@@ -1606,8 +1667,8 @@ const ResumeBuilder = () => {
                               typeof editableAiResume.skills === "string"
                                 ? editableAiResume.skills
                                 : Array.isArray(editableAiResume.skills)
-                                ? editableAiResume.skills.join(", ")
-                                : ""
+                                  ? editableAiResume.skills.join(", ")
+                                  : ""
                             }
                             onChange={(e) => {
                               // Store skills as a string in the editable state
@@ -1705,7 +1766,7 @@ const ResumeBuilder = () => {
                                     Responsibilities
                                   </label>
                                   {exp.responsibilities &&
-                                  Array.isArray(exp.responsibilities) ? (
+                                    Array.isArray(exp.responsibilities) ? (
                                     <div className="space-y-1">
                                       {exp.responsibilities.map(
                                         (resp, respIndex) => (
@@ -1898,10 +1959,8 @@ const ResumeBuilder = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 className="px-5 py-2.5 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-2"
-                onClick={() =>
-                  document.getElementById("my_modal_1").showModal()
-                }
-                // onClick={downloadPDF}
+                onClick={handleDownload}
+              // onClick={downloadPDF}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -1933,8 +1992,8 @@ const ResumeBuilder = () => {
                 {savingPDF
                   ? "Saving..."
                   : pdfSaved
-                  ? "Saved to Account"
-                  : "Save to Account"}
+                    ? "Saved to Account"
+                    : "Save to Account"}
               </button>
             </div>
 
@@ -1960,11 +2019,9 @@ const ResumeBuilder = () => {
             {Array.from({ length: 8 }).map((_, index) => (
               <div
                 key={index}
-                className={`h-full w-[4.5rem] md:w-24 ${
-                  index < step ? "bg-primary" : "bg-transparent"
-                } ${
-                  index < 7 && "border-r border-white/30"
-                } transition-all duration-500 ease-out`}
+                className={`h-full w-[4.5rem] md:w-24 ${index < step ? "bg-primary" : "bg-transparent"
+                  } ${index < 7 && "border-r border-white/30"
+                  } transition-all duration-500 ease-out`}
               />
             ))}
           </div>
@@ -1976,9 +2033,8 @@ const ResumeBuilder = () => {
             {Array.from({ length: 8 }).map((_, index) => (
               <div
                 key={index}
-                className={`relative h-3 flex items-center justify-center w-6 z-10 ${
-                  index < step ? "text-white" : "text-gray-400"
-                }`}
+                className={`relative h-3 flex items-center justify-center w-6 z-10 ${index < step ? "text-white" : "text-gray-400"
+                  }`}
               >
                 <span className="absolute text-[9px] font-semibold">
                   {index + 1}
@@ -2064,21 +2120,7 @@ const ResumeBuilder = () => {
           )}
         </div>
       </div>
-      <dialog id="my_modal_1" className="modal ">
-        <div className="modal-box !bg-white w-[750px] max-w-[750px]">
-          {/* <h3 className="font-bold text-lg">Hello!</h3>
-           <p className="py-4">
-            Press ESC key or click the button below to close
-          </p> */} 
-          <Payment downloadPDF={downloadPDF} savePDFToFirebase={savePDFToFirebase}></Payment>
-          <div className="modal-action flex justify-center items-center">
-            <form method="dialog" className="">
-              {/* if there is a button in form, it will close the modal */}
-              <button className="btn border border-blue-900">Cancel</button>
-            </form>
-          </div>
-        </div>
-      </dialog>
+
     </div>
   );
 };

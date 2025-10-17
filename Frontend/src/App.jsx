@@ -10,6 +10,8 @@ import Signup from "./pages/Auth/signup";
 import Dashboard from "./pages/Dashboard/dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
+import Success from "./pages/Actions/Success";
+import Error from "./pages/Actions/Error";
 
 const App = () => {
   // const [user] = useAuthState(auth);
@@ -20,6 +22,8 @@ const App = () => {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" exact element={<Login />} />
         <Route path="/signup" exact element={<Signup />} />
+        <Route path="/success" exact element={<Success />} />
+        <Route path="/cancel" exact element={<Error />} />
         {/* Protect Dashboard and Resume Builder */}
         <Route
           path="/dashboard"

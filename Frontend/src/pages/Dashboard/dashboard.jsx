@@ -23,6 +23,7 @@ import CoverLetter from "@/components/DashboardSections/CoverLetter";
 import CreateResume from "@/components/DashboardSections/CreateResume";
 import { Minus, Bell, Search } from "lucide-react";
 import Settings from "@/components/DashboardSections/Settings";
+import Plan from "@/components/DashboardSections/Plan"
 import CreateCover from "@/components/DashboardSections/CreateCover";
 import { auth } from "@/Firebase/firebase.config";
 
@@ -63,6 +64,13 @@ function SettingsContent() {
   return (
     <div>
       <Settings />
+    </div>
+  )
+}
+function PlanContent() {
+  return (
+    <div>
+      <Plan />
     </div>
   )
 }
@@ -141,6 +149,9 @@ const Dashboard = () => {
       break;
     case "Settings":
       mainContent = <SettingsContent />;
+      break;
+    case "Plans":
+      mainContent = <PlanContent />;
       break;
     default:
       mainContent = <DashContent />;

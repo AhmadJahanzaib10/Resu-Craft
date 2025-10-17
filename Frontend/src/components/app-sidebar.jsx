@@ -87,6 +87,11 @@ const data = {
       url: "#",
       icon: UserCircle,
     },
+    {
+      title: "Plans",
+      url: "#",
+      icon: UserCircle,
+    },
   ]
 }
 

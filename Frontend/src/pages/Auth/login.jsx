@@ -18,7 +18,7 @@ const LoginSchema = Yup.object().shape({
 const Login = () => {
   // const [error, setError] = useState("");
   const navigate = useNavigate();
-   const { logInUser,signUpGoogleUser, user,loading, setLoading } = useAuth()
+   const { logInUser,signUpGoogleUser, user,loading, setLoading, checkAndExpireSubscription } = useAuth()
 
 
 
@@ -41,49 +41,84 @@ const Login = () => {
     try {
       // Wait for the login to complete
       const res = await logInUser(email, password);
-  
-      console.log(res);
-      Swal.fire({
-        title: "Logged in",
-        icon: "success",
-      });
-  
-      navigate("/dashboard");
-    } catch (error) {
-      console.log(error);
-  
-      // Handle Firebase error codes
-      let message = "Something went wrong!";
-      if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
-        message = "Incorrect email or password. Please try again.";
-      } 
+      const user = res.user;
 
-      Swal.fire({
-        title: message,
+    // 2️⃣ Check and update subscription if expired
+    const expired = await checkAndExpireSubscription(user.uid);
+
+    // 3️⃣ Show alert depending on subscription status
+    if (expired) {
+      await Swal.fire({
         icon: "error",
+        title: "Subscription Expired",
+        text: "Your subscription has expired. Plan has been reset to Free.",
+        confirmButtonColor: "#d33",
       });
-    } finally {
-      setSubmitting(false);
-      setLoading(false);
+    } else {
+      await Swal.fire({
+        position: "top",
+        icon: "success",
+        title: "Logged in successfully",
+        showConfirmButton: false,
+        timer: 1000,
+      });
     }
+
+    // 4️⃣ Navigate to dashboard
+    navigate("/dashboard");
+  } catch (error) {
+    console.log(error);
+
+    // Handle Firebase error codes
+    let message = "Something went wrong!";
+    if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
+      message = "Incorrect email or password. Please try again.";
+    }
+
+    Swal.fire({
+      title: message,
+      icon: "error",
+    });
+  } finally {
+    setSubmitting(false);
+    setLoading(false);
+  }
   };
   
   //edited by developer
   const loginWithGoogle = async () => {
-    signUpGoogleUser()
-            .then(res => {
-                Swal.fire({
-                    position: "top",
-                    icon: "success",
-                    title: "Logged in succesfully",
-                    showConfirmButton: false,
-                    timer: 1000
-                });
-
-                navigate("/dashboard")
-            }
-            )
-            .catch(err => console.log(err))
+    try {
+      const { user, expired } = await signUpGoogleUser();
+      if (expired) {
+        // Subscription has expired → show alert
+        await Swal.fire({
+          icon: "error",
+          title: "Subscription Expired",
+          text: "Your subscription has expired. Please renew to access all features.",
+          confirmButtonColor: "#d33",
+        });
+      } else {
+        // Subscription active or free → show success
+        await Swal.fire({
+          position: "top",
+          icon: "success",
+          title: "Logged in successfully",
+          showConfirmButton: false,
+          timer: 1000,
+        });
+      }
+  
+      // Safe to redirect after alert
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Login Failed",
+        text: err.message || "Something went wrong.",
+        confirmButtonColor: "#d33",
+      });
+    }
     
   };
 
