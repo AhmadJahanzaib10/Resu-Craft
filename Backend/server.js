@@ -126,8 +126,8 @@ app.post("/create-checkout-session", async (req, res) => {
           quantity: 1,
         },
       ],
-      success_url: "http://localhost:5173/success",
-      cancel_url: "http://localhost:5173/cancel",
+      success_url: "https://app.resumeshaperai.com/success",
+      cancel_url: "https://app.resumeshaperai.com/cancel",
       metadata: {
         userId,
         planName,

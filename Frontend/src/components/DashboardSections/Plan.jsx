@@ -32,7 +32,7 @@ export default function Plan() {
       name: 'Weekly',
       price: '8.99',
       period: 'week',
-      stripePriceId: 'price_1SIE6WLlctx6KinRkzVIF99p',
+      stripePriceId: 'price_1SIE4RLlctx6KinRMc3yODk3',
       icon: Calendar,
       description: 'Perfect for trying out'
     },
