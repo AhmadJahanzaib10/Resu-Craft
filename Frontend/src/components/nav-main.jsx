@@ -53,31 +53,29 @@ export function NavMain({ items, onSectionChange, activeSection }) {
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton
                     tooltip={item.title}
-                    className={`text-sm font-medium transition-all duration-200 rounded-lg px-3 py-2.5
-                      ${
-                        isActive || isSubItemActive
-                          ? "bg-primary/10 text-primary shadow-sm"
-                          : "text-gray-600 hover:bg-gray-100/50 hover:text-gray-900"
+                    className={`text-sm ${item.title == "Plans" ? "font-bold" : "font-medium"} transition-all duration-200 rounded-lg px-3 py-2.5
+                      ${isActive || isSubItemActive
+                        ? "bg-primary/10 text-primary shadow-sm"
+                        : "text-gray-600 hover:bg-gray-100/50 hover:text-gray-900"
                       }`}
-                      onClick={() => {
-                        if (!item.items) {
-                          onSectionChange(item.title);
-                          // ✅ Close sidebar on mobile for Dashboard & Profile
-    if (isMobile) {
-      toggleSidebar();
-    }
+                    onClick={() => {
+                      if (!item.items) {
+                        onSectionChange(item.title);
+                        // ✅ Close sidebar on mobile for Dashboard & Profile
+                        if (isMobile) {
+                          toggleSidebar();
                         }
-                      }}
+                      }
+                    }}
                   >
                     {item.icon && (
                       <item.icon className={`size-5 ${(isActive || isSubItemActive) ? 'text-primary' : 'text-gray-500'}`} />
                     )}
                     <span className="ml-2">{item.title}</span>
                     {item.items && (
-                      <ChevronDown 
-                        className={`ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180 ${
-                          (isActive || isSubItemActive) ? 'text-primary' : 'text-gray-400'
-                        }`} 
+                      <ChevronDown
+                        className={`ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180 ${(isActive || isSubItemActive) ? 'text-primary' : 'text-gray-400'
+                          }`}
                       />
                     )}
                   </SidebarMenuButton>
@@ -91,22 +89,20 @@ export function NavMain({ items, onSectionChange, activeSection }) {
                           <SidebarMenuSubButton asChild>
                             <button
                               className={`w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200
-                                ${
-                                  activeSection === subItem.title
-                                    ? "bg-primary/10 text-primary shadow-sm"
-                                    : "text-gray-600 hover:bg-gray-100/50 hover:text-gray-900"
+                                ${activeSection === subItem.title
+                                  ? "bg-primary/10 text-primary shadow-sm"
+                                  : "text-gray-600 hover:bg-gray-100/50 hover:text-gray-900"
                                 }`}
-                                onClick={() => {
-                                  onSectionChange(subItem.title);
-                                  if (isMobile) {
-                                    toggleSidebar(); // ✅ only close on mobile
-                                  }
-                                }}
+                              onClick={() => {
+                                onSectionChange(subItem.title);
+                                if (isMobile) {
+                                  toggleSidebar(); // ✅ only close on mobile
+                                }
+                              }}
                             >
                               {subItem.icon && (
-                                <subItem.icon className={`size-4 ${
-                                  activeSection === subItem.title ? 'text-primary' : 'text-gray-500'
-                                }`} />
+                                <subItem.icon className={`size-4 ${activeSection === subItem.title ? 'text-primary' : 'text-gray-500'
+                                  }`} />
                               )}
                               <span>{subItem.title}</span>
                             </button>

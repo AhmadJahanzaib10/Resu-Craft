@@ -16,6 +16,7 @@ import {
   FileSpreadsheet,
   FileCheck,
   FileClock,
+  Banknote,
 } from "lucide-react"
 import { NavMain } from "@/components/nav-main"
 import { TeamSwitcher } from "@/components/team-switcher"
@@ -90,7 +91,7 @@ const data = {
     {
       title: "Plans",
       url: "#",
-      icon: UserCircle,
+      icon: Banknote,
     },
   ]
 }
