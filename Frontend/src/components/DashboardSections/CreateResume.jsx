@@ -264,7 +264,7 @@ const ResumeBuilder = () => {
         "skills": ["JavaScript", "React", "Node.js", "Agile Methodologies", "Project Management"]
       }
     `;
-
+    console.log(import.meta.env.VITE_GEMINI_API_KEY)
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -400,7 +400,7 @@ const ResumeBuilder = () => {
         ]
       }
     `;
-
+    console.log(import.meta.env.VITE_GEMINI_API_KEY)
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });

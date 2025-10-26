@@ -14,7 +14,7 @@ app.use(cors({ origin: "*" }));
 // This is your Stripe CLI webhook secret for testing your endpoint locally.
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-app.post('/webhook', express.raw({type: 'application/json'}), async (request, response) => {
+app.post('/webhook', express.raw({ type: 'application/json' }), async (request, response) => {
   const sig = request.headers['stripe-signature'];
 
   let event;
@@ -28,15 +28,15 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (request, re
 
   console.log(`📩 Stripe Event: ${event.type}`);
 
-   // ✅ Handle successful payment
-   if (event.type === 'checkout.session.completed') {
+  // ✅ Handle successful payment
+  if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const metadata = session.metadata || {}; // ensure it exists
 
-      const userId = metadata.userId; // from frontend
-      const planName = metadata.planName;
-      const customerId = session.customer;
-      const subscriptionId = session.subscription;
+    const userId = metadata.userId; // from frontend
+    const planName = metadata.planName;
+    const customerId = session.customer;
+    const subscriptionId = session.subscription;
 
     console.log(`✅ Payment success for user: ${userId}`);
 
@@ -46,36 +46,55 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (request, re
       const userRef = db.ref(`users/${userId}/subscription`);
 
       // Determine endDate based on planName
-const startDate = new Date();
-let endDate = new Date(startDate);
+      const startDate = new Date();
+      let endDate = new Date(startDate);
 
-if (planName.toLowerCase() === 'weekly') {
-  endDate.setDate(startDate.getDate() + 7);
-} else if (planName.toLowerCase() === 'bi-weekly') {
-  endDate.setDate(startDate.getDate() + 14);
-} else if (planName.toLowerCase() === 'monthly') {
-  endDate.setMonth(startDate.getMonth() + 1);
-} else {
-  // Default fallback (e.g., 1 week)
-  endDate.setDate(startDate.getDate() + 7);
-}
+      if (planName.toLowerCase() === 'weekly') {
+        endDate.setDate(startDate.getDate() + 7);
+      } else if (planName.toLowerCase() === 'bi-weekly') {
+        endDate.setDate(startDate.getDate() + 14);
+      } else if (planName.toLowerCase() === 'monthly') {
+        endDate.setMonth(startDate.getMonth() + 1);
+      } else {
+        // Default fallback (e.g., 1 week)
+        endDate.setDate(startDate.getDate() + 7);
+      }
 
-        // Update subscription info according to your schema
-        await userRef.update({
-          plan: planName, // optional fallback
-          status: 'active',
-          startDate: startDate,
-          endDate: endDate,
-          stripeCustomerId: customerId,
-          stripeSubscriptionId: subscriptionId,
-        });
+      // Update subscription info according to your schema
+      await userRef.update({
+        plan: planName, // optional fallback
+        status: 'active',
+        startDate: startDate,
+        endDate: endDate,
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscriptionId,
+      });
 
 
       console.log(`🔥 User ${userId} subscription updated in Firebase.`);
     } catch (error) {
       console.error('❌ Firebase update failed:', error);
     }
-  } else {
+  }
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object;
+    const customerId = subscription.customer;
+  
+    // find user by stripeCustomerId in Firebase
+    const db = admin.database();
+    const usersRef = db.ref("users");
+    const snapshot = await usersRef.once("value");
+  
+    snapshot.forEach((userSnap) => {
+      const sub = userSnap.val().subscription;
+      if (sub && sub.stripeCustomerId === customerId) {
+        userSnap.ref.child("subscription").update({ status: "canceled" });
+      }
+    });
+  
+    console.log(`🛑 Subscription canceled via webhook for customer ${customerId}`);
+  }
+  else {
     console.log(`Unhandled event type ${event.type}`);
   }
   // Return a 200 response to acknowledge receipt of the event
@@ -112,6 +131,7 @@ app.get("/", (req, res) => {
 app.post("/create-checkout-session", async (req, res) => {
   try {
     const { priceId, userId, planName } = req.body;
+    console.log("Local Session Route Hit")
 
     if (!priceId) {
       return res.status(400).json({ error: "Missing priceId" });
@@ -140,6 +160,45 @@ app.post("/create-checkout-session", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+app.post("/cancel-subscription", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: "Missing userId" });
+
+    const db = admin.database();
+    const userRef = db.ref(`users/${userId}/subscription`);
+    const snapshot = await userRef.once("value");
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "Subscription not found" });
+    }
+
+    const { stripeSubscriptionId } = snapshot.val();
+    if (!stripeSubscriptionId) {
+      return res.status(400).json({ error: "No Stripe subscription ID found" });
+    }
+
+    // Cancel the subscription immediately or at period end
+    const canceledSubscription = await stripe.subscriptions.update(
+      stripeSubscriptionId,
+      { cancel_at_period_end: true } // set false to cancel immediately
+    );
+
+    // Update Firebase
+    await userRef.update({
+      status: "canceled",
+      cancelAt: canceledSubscription.cancel_at,
+    });
+
+    console.log(`🛑 Subscription canceled for user: ${userId}`);
+    res.json({ success: true, canceledSubscription });
+  } catch (error) {
+    console.error("❌ Cancel subscription error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 // Stripe Payment Intent Route
 app.post("/create-payment-intent", async (req, res) => {

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Zap, Crown, Calendar, Shield, CheckCircle2, Clock, CreditCard } from 'lucide-react';
+import { Check, Zap, Crown,CircleOff, Calendar, Shield, CheckCircle2, Clock, CreditCard } from 'lucide-react';
 import {ref , onValue } from "firebase/database";
 import { db } from '@/Firebase/firebase.config';
 import useAuth from "@/hooks/useAuth";
 import '../../plan.css';
+import Swal from 'sweetalert2';
 
 export default function Plan() {
   const { user } = useAuth();
@@ -34,6 +35,7 @@ export default function Plan() {
       price: '8.99',
       period: 'week',
       stripePriceId: 'price_1SIE4RLlctx6KinRMc3yODk3',
+      // stripePriceId: 'price_1SItyiLlctx6KinRfhR6ZcIf',
       icon: Calendar,
       description: 'Perfect for trying out'
     },
@@ -60,6 +62,60 @@ export default function Plan() {
       savings: '25%'
     }
   ];
+
+  const cancelSubscription = async () => {
+     // Step 1: Ask for confirmation
+  const confirm = await Swal.fire({
+    title: "Are you sure?",
+    text: "Do you really want to cancel your subscription?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, cancel it",
+    cancelButtonText: "No, keep it",
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  // Step 2: Show a loading dialog while sending request
+  Swal.fire({
+    title: "Processing...",
+    text: "Canceling your subscription, please wait...",
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
+    try {
+      const VITE_Stripe_Backend_Api = import.meta.env.VITE_Stripe_Backend_Api;
+      const response = await fetch(`${VITE_Stripe_Backend_Api}/cancel-subscription`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({userId: user.uid }),
+      });
+  
+      const data = await response.json();
+      if (data.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Subscription canceled",
+          text: "Your subscription has been successfully canceled.",
+        });
+      } else {
+        wal.fire({
+          icon: "error",
+          title: "Failed",
+          text: data.error || "Something went wrong. Please try again.",
+        });
+      }
+    } catch (error) {
+      console.error("Cancel subscription failed:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Unable to cancel subscription. Please try again later.",
+      });
+    }
+  };
 
   const handleSubscribe = async (plan) => {
     setLoadingPlan(plan.id);
@@ -116,6 +172,8 @@ export default function Plan() {
         {/* Current Subscription Info */}
         {currentSubscription && (
           <div className="max-w-4xl mx-auto mb-12">
+            {currentSubscription.subscription.status === "active" ? <button onClick={cancelSubscription} style={{backgroundColor : "#24356e", display:"flex"}} className='mb-4 gap-2 cursor-pointer py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 mt-auto ms-auto'> <CircleOff/> Cancel Subscription</button> : null}
+            {currentSubscription.subscription.status === "canceled" ? <p className='mb-3'>Your Subscription will be automatically expired at the end date of your plan</p> : null}
             <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 border-2" style={{ borderColor: '#24356e' }}>
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
