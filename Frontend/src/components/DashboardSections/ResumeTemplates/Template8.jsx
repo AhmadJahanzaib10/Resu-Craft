@@ -87,7 +87,7 @@ export function generateTemplate8PDF(resume) {
     const wrappedSummary = doc.splitTextToSize(resume.summary || "", maxWidthPage);
 
     doc.text(wrappedSummary, marginLeft, currentY + 10);
-    currentY += 20; // Adjust height based on wrapped lines
+    currentY += wrappedSummary.length * lineHeight; // Adjust height based on wrapped lines
     currentY += sectionGap;
 
     // -------------------------
