@@ -277,7 +277,7 @@ export function generateTemplate8PDF(resume) {
                             doc.text(line, marginLeft + 30, currentY);
                         } else {
                             // Continuation lines → only text (no extra bullet)
-                            doc.text(line, marginLeft + 10, currentY);
+                            doc.text(line, marginLeft + 20, currentY);
                         }
                         currentY += lineHeight;
                     });
