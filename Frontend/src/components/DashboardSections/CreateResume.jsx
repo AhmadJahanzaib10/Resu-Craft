@@ -14,6 +14,7 @@ import { generateTemplate4PDF } from "./ResumeTemplates/Template4";
 import { generateTemplate5PDF } from "./ResumeTemplates/Template5";
 import { generateTemplate6PDF } from "./ResumeTemplates/Template6";
 import { generateTemplate7PDF } from "./ResumeTemplates/Template7";
+import { generateTemplate8PDF } from "./ResumeTemplates/Template8";
 
 import temp2 from "../../assets/images/temp2.webp";
 import temp3 from "../../assets/images/temp3.webp";
@@ -21,6 +22,7 @@ import temp4 from "../../assets/images/temp5.webp";
 import temp5 from "../../assets/images/temp.webp";
 import temp6 from "../../assets/images/temp6.webp";
 import temp7 from "../../assets/images/temp7.webp";
+import temp8 from "../../assets/images/temp8.webp";
 
 import ModernInput from "../ModernInput";
 import useAuth from "@/hooks/useAuth";
@@ -98,6 +100,7 @@ const ResumeBuilder = () => {
     template5: temp5,
     template6: temp6,
     template7: temp7,
+    template8: temp8,
   };
 
   // Updated state with separate fields for phone, email, address and stackable fields.
@@ -400,7 +403,6 @@ const ResumeBuilder = () => {
         ]
       }
     `;
-    console.log(import.meta.env.VITE_GEMINI_API_KEY)
     // Initialize Gemini API
     const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -578,6 +580,9 @@ const ResumeBuilder = () => {
         break;
       case "template7":
         doc = generateTemplate7PDF(resume);
+        break;
+      case "template8":
+        doc = generateTemplate8PDF(resume);
         break;
       // add more cases as needed
       default:
@@ -1454,6 +1459,7 @@ const ResumeBuilder = () => {
                 "template5",
                 "template6",
                 "template7",
+                "template8"
               ].map((tpl) => (
                 <div
                   key={tpl}
