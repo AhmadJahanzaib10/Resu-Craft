@@ -123,8 +123,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-2xl">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-[100%] md:w-[50%] h-screen rounded-2xl px-6 flex justify-center flex-col">
         {/* <img src={mockLogo} alt="Logo" className="w-20 h-20 mx-auto" /> */}
         <div className="text-center mb-6">
           <h2 className="text-4xl font-bold text-primary font-outfit relative inline-block">
@@ -214,6 +214,9 @@ const Login = () => {
             Sign up here
           </Link>
         </p>
+      </div>
+      <div className="hidden md:block w-[50%] h-screen rounded-2xl">
+        <video className="w-[100%] h-[100%] object-cover" loop autoPlay src="https://res.cloudinary.com/dnl7fvz4m/video/upload/v1763394246/Art_tvxczl.mp4"></video>
       </div>
     </div>
   );
