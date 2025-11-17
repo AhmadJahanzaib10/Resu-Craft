@@ -216,7 +216,15 @@ const Login = () => {
         </p>
       </div>
       <div className="hidden md:block w-[50%] h-screen rounded-2xl">
-        <video className="w-[100%] h-[100%] object-cover" loop autoPlay src="https://res.cloudinary.com/dnl7fvz4m/video/upload/v1763394246/Art_tvxczl.mp4"></video>
+      <video 
+  className="w-[100%] h-[100%] object-cover"
+  autoPlay
+  muted
+  loop
+  playsInline
+>
+  <source src="https://res.cloudinary.com/dnl7fvz4m/video/upload/f_auto,q_auto/v1763394246/Art_tvxczl.mp4" type="video/mp4" />
+</video>
       </div>
     </div>
   );
