@@ -141,7 +141,6 @@ const Login = () => {
           </h2>
           <p className="text-center text-gray-500 mt-4 text-sm">Your AI-powered resume assistant</p>
         </div>
-        <h2 className="text-xl font-plight text-left mb-5 text-primary">Login</h2>
         
         {/* {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -154,8 +153,10 @@ const Login = () => {
           validationSchema={LoginSchema}
           onSubmit={handleSubmit}
         >
+          
           {({ isSubmitting, handleSubmit }) => (
-            <Form className="flex flex-col space-y-4">
+            <Form className="flex flex-col space-y-4 w-[70%] mx-auto">
+              <h2 className="text-xl font-plight text-left mb-5 text-primary">Login</h2>
               <div>
                 <Field
                   type="email"
