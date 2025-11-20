@@ -9,9 +9,11 @@ import Login from "./pages/Auth/login";
 import Signup from "./pages/Auth/signup";
 import Dashboard from "./pages/Dashboard/dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import EmailVerificationRoute from "./components/EmailVerificationRoute";
 import "./App.css";
 import Success from "./pages/Actions/Success";
 import Error from "./pages/Actions/Error";
+import VerifyEmail from "./pages/Auth/VerifyEmail";
 
 const App = () => {
   // const [user] = useAuthState(auth);
@@ -24,6 +26,14 @@ const App = () => {
         <Route path="/signup" exact element={<Signup />} />
         <Route path="/success" exact element={<Success />} />
         <Route path="/cancel" exact element={<Error />} />
+        <Route
+          path="/verify-email"
+          element={
+            <EmailVerificationRoute>
+              <VerifyEmail />
+            </EmailVerificationRoute>
+          }
+        />
         {/* Protect Dashboard and Resume Builder */}
         <Route
           path="/dashboard"

@@ -18,7 +18,7 @@ const LoginSchema = Yup.object().shape({
 const Login = () => {
   // const [error, setError] = useState("");
   const navigate = useNavigate();
-   const { logInUser,signUpGoogleUser, user,loading, setLoading, checkAndExpireSubscription } = useAuth()
+  const { logInUser,signUpGoogleUser, user,loading, setLoading, checkAndExpireSubscription } = useAuth()
 
 
 
@@ -27,10 +27,11 @@ const Login = () => {
   
   useEffect(() => {
     // Check if user is already logged in
-      if (user) 
+    console.log(user)
+      if (!loading && user && user.emailVerified) 
       navigate("/dashboard");
     
-  }, [navigate]);
+  }, [loading, user, navigate]);
 
   
 
@@ -39,51 +40,62 @@ const Login = () => {
     const { email, password } = values;
   
     try {
-      // Wait for the login to complete
+      // 1️⃣ Attempt login
       const res = await logInUser(email, password);
       const user = res.user;
-
-    // 2️⃣ Check and update subscription if expired
-    const expired = await checkAndExpireSubscription(user.uid);
-
-    // 3️⃣ Show alert depending on subscription status
-    if (expired) {
-      await Swal.fire({
+  
+      // 2️⃣ If email is NOT verified → redirect to verify page
+      if (!user.emailVerified) {
+        await Swal.fire({
+          icon: "warning",
+          title: "Verify Your Email",
+          text: "Please check your inbox and verify your email before logging in.",
+        });
+  
+        navigate("/verify-email");
+        return; // 🚫 Stop further execution
+      }
+  
+      // 3️⃣ Check subscription status if verified
+      const expired = await checkAndExpireSubscription(user.uid);
+  
+      if (expired) {
+        await Swal.fire({
+          icon: "error",
+          title: "Subscription Expired",
+          text: "Your subscription has expired. Plan has been reset to Free.",
+        });
+      } else {
+        await Swal.fire({
+          position: "top",
+          icon: "success",
+          title: "Logged in successfully",
+          showConfirmButton: false,
+          timer: 1000,
+        });
+      }
+  
+      // 4️⃣ Navigate to dashboard
+      navigate("/dashboard");
+  
+    } catch (error) {
+      console.log(error);
+  
+      let message = "Something went wrong!";
+      if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
+        message = "Incorrect email or password. Please try again.";
+      }
+  
+      Swal.fire({
+        title: message,
         icon: "error",
-        title: "Subscription Expired",
-        text: "Your subscription has expired. Plan has been reset to Free.",
-        confirmButtonColor: "#d33",
       });
-    } else {
-      await Swal.fire({
-        position: "top",
-        icon: "success",
-        title: "Logged in successfully",
-        showConfirmButton: false,
-        timer: 1000,
-      });
+    } finally {
+      setSubmitting(false);
+      setLoading(false);
     }
-
-    // 4️⃣ Navigate to dashboard
-    navigate("/dashboard");
-  } catch (error) {
-    console.log(error);
-
-    // Handle Firebase error codes
-    let message = "Something went wrong!";
-    if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
-      message = "Incorrect email or password. Please try again.";
-    }
-
-    Swal.fire({
-      title: message,
-      icon: "error",
-    });
-  } finally {
-    setSubmitting(false);
-    setLoading(false);
-  }
   };
+  
   
   //edited by developer
   const loginWithGoogle = async () => {
@@ -215,17 +227,6 @@ const Login = () => {
             Sign up here
           </Link>
         </p>
-      </div>
-      <div className="hidden md:block w-[50%] h-screen rounded-2xl">
-      <video 
-  className="w-[100%] h-[100%] object-cover"
-  autoPlay
-  muted
-  loop
-  playsInline
->
-  <source src="https://res.cloudinary.com/dnl7fvz4m/video/upload/f_auto,q_auto/v1763394246/Art_tvxczl.mp4" type="video/mp4" />
-</video>
       </div>
     </div>
   );

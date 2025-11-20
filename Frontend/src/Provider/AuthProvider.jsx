@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, sendEmailVerification } from 'firebase/auth';
 import React, { createContext, useEffect, useState } from 'react';
 import { GoogleAuthProvider } from 'firebase/auth';
 import { ref, get, set, update } from "firebase/database";
@@ -60,7 +60,6 @@ const AuthProvider = ({ children }) => {
 
     const ensureUserData = async (firebaseUser) => {
         if (!firebaseUser) return;
-        console.log(firebaseUser)
 
         try {
             const userRef = ref(db, `users/${firebaseUser.uid}`);
@@ -81,9 +80,7 @@ const AuthProvider = ({ children }) => {
                         stripeSubscriptionId: null,
                     },
                 });
-                console.log("✅ RTDB user created:", firebaseUser.email);
             } else {
-                console.log("✅ RTDB user exists:", firebaseUser.email);
             }
         } catch (error) {
             console.error("❌ RTDB ensure user failed:", error);
@@ -92,13 +89,20 @@ const AuthProvider = ({ children }) => {
 
     const signUpUser = async (name, email, password) => {
         setLoading(true);
+
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-
+    
         await updateProfile(user, { displayName: name });
+    
+        // Send verification
+        await sendEmailVerification(user);
+    
+        // Create in DB
         await ensureUserData(user);
-
-        return user;
+    
+        // ❗ DO NOT auto-login. Just return status.
+        return { user, needsVerification: true };
     }
     const signUpGoogleUser = async () => {
         setLoading(true);
