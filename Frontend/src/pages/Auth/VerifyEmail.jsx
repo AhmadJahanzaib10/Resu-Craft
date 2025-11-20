@@ -49,7 +49,7 @@ const VerifyEmail = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
       <h1 className="text-2xl font-bold">Verify Your Email</h1>
-      <p className="text-gray-600">
+      <p className="text-gray-600 w-50">
       A verification link has been sent to your email. If you don’t see it in your inbox, please check your spam or junk folder. Once verified, you will be redirected automatically.
       </p>
 
