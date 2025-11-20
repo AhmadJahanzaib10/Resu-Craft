@@ -91,6 +91,11 @@ const Dashboard = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       if (currentUser) {
+        if (!currentUser.emailVerified) {
+          // ❗ Redirect unverified users out
+          navigate("/verify-email");
+          return;
+        }
         setUser({
           name: currentUser.displayName || "User",
           email: currentUser.email,
