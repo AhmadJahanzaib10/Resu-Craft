@@ -18,32 +18,32 @@ const LoginSchema = Yup.object().shape({
 const Login = () => {
   // const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { logInUser,signUpGoogleUser, user,loading, setLoading, checkAndExpireSubscription } = useAuth()
+  const { logInUser, signUpGoogleUser, user, loading, setLoading, checkAndExpireSubscription, resetPassword } = useAuth()
 
 
 
-     //edited by developer
+  //edited by developer
   // Check for auth state and redirect result when component mounts
-  
+
   useEffect(() => {
     // Check if user is already logged in
     console.log(user)
-      if (!loading && user && user.emailVerified) 
+    if (!loading && user && user.emailVerified)
       navigate("/dashboard");
-    
+
   }, [loading, user, navigate]);
 
-  
+
 
   //edited by developer
   const handleSubmit = async (values, { setSubmitting }) => {
     const { email, password } = values;
-  
+
     try {
       // 1️⃣ Attempt login
       const res = await logInUser(email, password);
       const user = res.user;
-  
+
       // 2️⃣ If email is NOT verified → redirect to verify page
       if (!user.emailVerified) {
         await Swal.fire({
@@ -51,14 +51,14 @@ const Login = () => {
           title: "Verify Your Email",
           text: "Please check your inbox and verify your email before logging in.",
         });
-  
+
         navigate("/verify-email");
         return; // 🚫 Stop further execution
       }
-  
+
       // 3️⃣ Check subscription status if verified
       const expired = await checkAndExpireSubscription(user.uid);
-  
+
       if (expired) {
         await Swal.fire({
           icon: "error",
@@ -74,18 +74,18 @@ const Login = () => {
           timer: 1000,
         });
       }
-  
+
       // 4️⃣ Navigate to dashboard
       navigate("/dashboard");
-  
+
     } catch (error) {
       console.log(error);
-  
+
       let message = "Something went wrong!";
       if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
         message = "Incorrect email or password. Please try again.";
       }
-  
+
       Swal.fire({
         title: message,
         icon: "error",
@@ -95,8 +95,34 @@ const Login = () => {
       setLoading(false);
     }
   };
-  
-  
+
+  const handleForgotPassword = async (email) => {
+    if (!email) {
+      Swal.fire({
+        icon: "warning",
+        title: "Email Required",
+        text: "Please enter your email address first.",
+      });
+      return;
+    }
+
+    try {
+      await resetPassword(email);
+      Swal.fire({
+        icon: "success",
+        title: "Reset Email Sent",
+        text: "Check your inbox or spam folder to reset your password.",
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Failed to send reset email.",
+      });
+    }
+  };
+
+
   //edited by developer
   const loginWithGoogle = async () => {
     try {
@@ -119,7 +145,7 @@ const Login = () => {
           timer: 1000,
         });
       }
-  
+
       // Safe to redirect after alert
       navigate("/dashboard");
     } catch (err) {
@@ -131,7 +157,7 @@ const Login = () => {
         confirmButtonColor: "#d33",
       });
     }
-    
+
   };
 
   return (
@@ -142,10 +168,10 @@ const Login = () => {
           <h2 className="text-4xl font-bold text-primary font-outfit relative inline-block">
             Resume Shaper AI
             <svg className="absolute w-full" style={{ bottom: "-8px", left: "0" }} viewBox="0 0 200 8" xmlns="http://www.w3.org/2000/svg">
-              <path 
-                d="M 0 4 C 40 0, 60 8, 100 4 C 140 0, 160 8, 200 4" 
-                fill="none" 
-                stroke="currentColor" 
+              <path
+                d="M 0 4 C 40 0, 60 8, 100 4 C 140 0, 160 8, 200 4"
+                fill="none"
+                stroke="currentColor"
                 strokeWidth="2"
                 className="text-primary"
               />
@@ -153,20 +179,20 @@ const Login = () => {
           </h2>
           <p className="text-center text-gray-500 mt-4 text-sm">Your AI-powered resume assistant</p>
         </div>
-        
+
         {/* {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )} */}
-        
+
         <Formik
           initialValues={{ email: "", password: "" }}
           validationSchema={LoginSchema}
           onSubmit={handleSubmit}
         >
-          
-          {({ isSubmitting, handleSubmit }) => (
+
+          {({ isSubmitting, handleSubmit, values }) => (
             <Form className="flex flex-col space-y-4 w-[70%] mx-auto">
               <h2 className="text-xl font-plight text-left mb-5 text-primary">Login</h2>
               <div>
@@ -179,8 +205,8 @@ const Login = () => {
                 />
                 <ErrorMessage name="email" component="div" className="text-red-500 text-sm mb-2" />
               </div>
-              
-              <div>
+
+              <div className="mb-0">
                 <Field
                   type="password"
                   name="password"
@@ -190,7 +216,17 @@ const Login = () => {
                 />
                 <ErrorMessage name="password" component="div" className="text-red-500 text-sm mb-2" />
               </div>
-              
+              <div className="text-left mb-4">
+                <button
+                  type="button"
+                  className="text-sm text-primary hover:underline"
+                  onClick={() => handleForgotPassword(values.email)}
+                  disabled={loading || isSubmitting}
+                >
+                  Forgot password?
+                </button>
+              </div>
+
               <button
                 type="submit"
                 className="w-full cursor-pointer bg-primary rounded-lg text-white p-2 mb-3"
@@ -217,7 +253,7 @@ const Login = () => {
             </Form>
           )}
         </Formik>
-        
+
         <p className="text-center mt-4 text-sm">
           Don't have an account?{" "}
           <Link

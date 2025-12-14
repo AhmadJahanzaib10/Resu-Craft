@@ -84,6 +84,8 @@ const ResumeBuilder = () => {
   const [savingPDF, setSavingPDF] = useState(false);
 
   const [pdfBlob, setPdfBlob] = useState(null);
+  // Check if it's mobile screen (Fixing the bottom next and prev buttons for step 6)
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     if (aiResume) {
@@ -92,6 +94,17 @@ const ResumeBuilder = () => {
       // or use JSON.parse(JSON.stringify(aiResume)) if needed
     }
   }, [aiResume]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize(); // initial check
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const templateImages = {
     template2: temp2,
@@ -2083,7 +2096,7 @@ const ResumeBuilder = () => {
           </div>
         )}
         {renderStep()}
-        <div className="flex justify-between mt-8">
+        <div className={`flex justify-between mt-8 ${step === 6 && isMobile ? "bottom-fixed" : ""}`}>
           {step > 1 && (
             <button
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-2"

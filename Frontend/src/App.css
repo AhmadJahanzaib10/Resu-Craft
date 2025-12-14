@@ -158,6 +158,14 @@
 body {
     font-family: var(--font-pregular);
 }
+.bottom-fixed{
+    padding: 10px 48px;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    background: #fff;
+}
 
 @media screen and (max-width: 768px) {
     .mob-maxw-100{

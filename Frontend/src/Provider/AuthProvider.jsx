@@ -6,6 +6,7 @@ import { ref, get, set, update } from "firebase/database";
 import { auth } from '@/Firebase/firebase.config';
 import { db } from "@/Firebase/firebase.config";
 import Swal from 'sweetalert2';
+import { sendPasswordResetEmail } from "firebase/auth";
 
 export const AuthContext = createContext()
 const AuthProvider = ({ children }) => {
@@ -132,6 +133,12 @@ const AuthProvider = ({ children }) => {
         return signOut(auth)
     }
 
+    const resetPassword = (email) => {
+        setLoading(true);
+        return sendPasswordResetEmail(auth, email)
+          .finally(() => setLoading(false));
+    };
+
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -159,7 +166,8 @@ const AuthProvider = ({ children }) => {
         signOutUser,
         signUpGoogleUser,
         setLoading,
-        checkAndExpireSubscription
+        checkAndExpireSubscription,
+        resetPassword
     }
     return (
         <AuthContext.Provider value={authInfo}>
