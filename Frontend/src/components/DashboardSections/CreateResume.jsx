@@ -15,6 +15,7 @@ import { generateTemplate5PDF } from "./ResumeTemplates/Template5";
 import { generateTemplate6PDF } from "./ResumeTemplates/Template6";
 import { generateTemplate7PDF } from "./ResumeTemplates/Template7";
 import { generateTemplate8PDF } from "./ResumeTemplates/Template8";
+import { generateTemplate9PDF } from "./ResumeTemplates/Template9";
 
 import temp2 from "../../assets/images/temp2.webp";
 import temp3 from "../../assets/images/temp3.webp";
@@ -23,6 +24,7 @@ import temp5 from "../../assets/images/temp.webp";
 import temp6 from "../../assets/images/temp6.webp";
 import temp7 from "../../assets/images/temp7.webp";
 import temp8 from "../../assets/images/temp8.webp";
+import temp9 from "../../assets/images/temp9.webp";
 
 import ModernInput from "../ModernInput";
 import useAuth from "@/hooks/useAuth";
@@ -114,6 +116,7 @@ const ResumeBuilder = () => {
     template6: temp6,
     template7: temp7,
     template8: temp8,
+    template9: temp9,
   };
 
   // Updated state with separate fields for phone, email, address and stackable fields.
@@ -596,6 +599,9 @@ const ResumeBuilder = () => {
         break;
       case "template8":
         doc = generateTemplate8PDF(resume);
+        break;
+      case "template9":
+        doc = generateTemplate9PDF(resume);
         break;
       // add more cases as needed
       default:
@@ -1472,7 +1478,8 @@ const ResumeBuilder = () => {
                 "template5",
                 "template6",
                 "template7",
-                "template8"
+                "template8",
+                "template9"
               ].map((tpl) => (
                 <div
                   key={tpl}
