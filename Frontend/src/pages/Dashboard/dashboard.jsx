@@ -44,10 +44,10 @@ function ResumeBuilderContent({ setActiveSection }) {
 }
 
 
-function CreateResumeContent() {
+function CreateResumeContent({ setActiveSection }) {
   return (
     <div>
-      <CreateResume />
+      <CreateResume setActiveSection={setActiveSection} />
     </div>
   )
 }
@@ -132,7 +132,7 @@ const Dashboard = () => {
       mainContent = <ResumeBuilderContent setActiveSection={handleSectionChange} />;
       break;
     case "Create New":
-      mainContent = <CreateResumeContent />;
+      mainContent = <CreateResumeContent setActiveSection={handleSectionChange} />;
       break;
     case "Templates":
       mainContent = <ResumeBuilderContent setActiveSection={handleSectionChange} />;
@@ -156,7 +156,7 @@ const Dashboard = () => {
       mainContent = <SettingsContent />;
       break;
     case "Plans":
-      mainContent = <PlanContent />;
+      mainContent = <PlanContent setActiveSection={handleSectionChange} />;
       break;
     default:
       mainContent = <DashContent />;

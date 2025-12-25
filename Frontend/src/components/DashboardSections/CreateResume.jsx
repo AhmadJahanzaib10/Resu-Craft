@@ -53,7 +53,7 @@ const personalInfoSchema = yup.object().shape({
   // .matches(/^https?:\/\/(www\.)?linkedin\.com\/in\/[A-Za-z0-9_-]+$/, "Invalid LinkedIn URL"),
 });
 
-const ResumeBuilder = () => {
+const ResumeBuilder = ({ setActiveSection }) => {
   const { user } = useAuth();
   // We now have 8 steps (Step 5 is for Additional Content)
   const [step, setStep] = useState(1);
@@ -536,7 +536,15 @@ const ResumeBuilder = () => {
           icon: "warning",
           title: "No Subscription Found",
           text: "Please subscribe first to download the PDF.",
+          showCancelButton: true,             // ✅ show a second "Cancel" button
+          confirmButtonText: "Subscribe Now",    // ✅ this is your button
+          cancelButtonText: "Cancel",
           confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#aaa",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            setActiveSection("Plans");         // 🔥 switch Dashboard section
+          }
         });
         return;
       }
@@ -556,7 +564,15 @@ const ResumeBuilder = () => {
           icon: "error",
           title: "Subscription Expired",
           text: "Your subscription has expired. Please renew to continue.",
-          confirmButtonColor: "#d33",
+          showCancelButton: true,             // ✅ show a second "Cancel" button
+          confirmButtonText: "Subscribe Now",    // ✅ this is your button
+          cancelButtonText: "Cancel",
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#aaa",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            setActiveSection("Plans");         // 🔥 switch Dashboard section
+          }
         });
         return;
       }
@@ -1172,8 +1188,8 @@ const ResumeBuilder = () => {
                 />
                 <button
                   className={`px-4 flex items-center justify-center ${resume.skills.length >= 5 || !currentSkill.trim()
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-primary hover:bg-primary/90"
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-primary hover:bg-primary/90"
                     } text-white rounded-r-md transition-colors`}
                   onClick={() => {
                     if (currentSkill.trim() && resume.skills.length < 5) {
@@ -1267,8 +1283,8 @@ const ResumeBuilder = () => {
                 />
                 <button
                   className={`px-4 flex items-center justify-center ${!currentLanguage.trim()
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-primary hover:bg-primary/90"
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-primary hover:bg-primary/90"
                     } text-white rounded-r-md transition-colors`}
                   onClick={() => {
                     if (currentLanguage.trim()) {
@@ -1369,10 +1385,10 @@ const ResumeBuilder = () => {
                   />
                   <button
                     className={`px-4 flex items-center justify-center ${resume.additionalContent.references.length >= 2 ||
-                        !currentReferenceName.trim() ||
-                        !currentReferenceContact.trim()
-                        ? "bg-gray-300 cursor-not-allowed"
-                        : "bg-primary hover:bg-primary/90"
+                      !currentReferenceName.trim() ||
+                      !currentReferenceContact.trim()
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : "bg-primary hover:bg-primary/90"
                       } text-white rounded-r-md transition-colors`}
                     onClick={() => {
                       if (
@@ -1484,8 +1500,8 @@ const ResumeBuilder = () => {
                 <div
                   key={tpl}
                   className={`overflow-hidden rounded-md transition-all duration-200 cursor-pointer ${resume.template === tpl
-                      ? "ring-2 ring-primary scale-[1.02]"
-                      : "hover:shadow-md hover:scale-[1.02]"
+                    ? "ring-2 ring-primary scale-[1.02]"
+                    : "hover:shadow-md hover:scale-[1.02]"
                     }`}
                   onClick={() => setResume({ ...resume, template: tpl })}
                 >
@@ -1497,8 +1513,8 @@ const ResumeBuilder = () => {
                     />
                     <div
                       className={`absolute inset-0 ${resume.template === tpl
-                          ? "bg-primary/10"
-                          : "hover:bg-black/5"
+                        ? "bg-primary/10"
+                        : "hover:bg-black/5"
                         }`}
                     ></div>
                   </div>
