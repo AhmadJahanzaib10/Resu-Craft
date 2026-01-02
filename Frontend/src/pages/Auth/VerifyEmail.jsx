@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { auth } from "@/Firebase/firebase.config";
 import { sendEmailVerification, reload } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 const VerifyEmail = () => {
@@ -53,6 +53,7 @@ const VerifyEmail = () => {
       A verification link has been sent to your email. If you don’t see it in your inbox, please check your spam or junk folder. Once verified, you will be redirected automatically.
       </p>
 
+      <div className="d-flex gap-2">
       <button
         onClick={resendEmail}
         disabled={sending}
@@ -60,6 +61,10 @@ const VerifyEmail = () => {
       >
         {sending ? "Sending..." : "Resend verification email"}
       </button>
+      <button className="bg-zinc-500 text-white px-6 py-2 rounded">
+      <Navigate to="/login"/>
+      </button>
+      </div>
     </div>
   );
 };
