@@ -49,11 +49,11 @@ const VerifyEmail = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">
       <h1 className="text-2xl font-bold">Verify Your Email</h1>
-      <p className="text-gray-600 w-50">
+      <p className="text-gray-600 w-[80%] text-center">
       A verification link has been sent to your email. If you don’t see it in your inbox, please check your spam or junk folder. Once verified, you will be redirected automatically.
       </p>
 
-      <div className="d-flex gap-2">
+      <div className="mt-5 flex flex-col gap-2">
       <button
         onClick={resendEmail}
         disabled={sending}
@@ -61,9 +61,16 @@ const VerifyEmail = () => {
       >
         {sending ? "Sending..." : "Resend verification email"}
       </button>
-      <button className="bg-zinc-500 text-white px-6 py-2 rounded">
-      <Navigate to="/login"/>
+      <button
+        onClick={()=> navigate("/login")}
+        disabled={sending}
+        className="bg-zinc-600 text-white px-6 py-2 rounded"
+      >
+        Go to Login
       </button>
+      {/* <button className="bg-zinc-500 text-white px-6 py-2 rounded">
+      <Navigate to="/login"/>
+      </button> */}
       </div>
     </div>
   );
