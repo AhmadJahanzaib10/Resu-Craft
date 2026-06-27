@@ -1,44 +1,26 @@
 import { jsPDF } from "jspdf";
 
-/**
- * Draw right-aligned, wrapped text within a fixed width.
- * @param {jsPDF} doc - jsPDF instance
- * @param {string} text - Text to draw
- * @param {number} rightX - Right edge of the text (anchor)
- * @param {number} leftX - Left boundary (max left)
- * @param {number} startY - Starting Y position
- * @param {number} lineHeight - Height between lines
- * @param {number} letterSpacing - Optional letter spacing
- * @returns {number} - Total height used
- */
 function drawRightAlignedBlock(doc, text, rightX, leftX, y, lineHeight = 14) {
   if (!text) return 0;
-
   const maxWidth = rightX - leftX;
-
   doc.text(text, rightX, y, {
     maxWidth,
     align: "right",
-    lineHeightFactor: lineHeight / doc.getFontSize()
+    lineHeightFactor: lineHeight / doc.getFontSize(),
   });
-
   const lines = doc.splitTextToSize(text, maxWidth);
   return lines.length * lineHeight;
 }
 
-
-
-
 function drawSpacedText(doc, text, x, y, spacing = 1, options = {}) {
+  if (!text) return;
   let cursorX = x;
-
   if (options.align === "right") {
     const textWidth =
       (doc.getStringUnitWidth(text) * doc.internal.getFontSize()) /
       doc.internal.scaleFactor;
     cursorX = x - textWidth - spacing * (text.length - 1);
   }
-
   for (let i = 0; i < text.length; i++) {
     doc.text(text[i], cursorX, y);
     cursorX +=
@@ -48,461 +30,412 @@ function drawSpacedText(doc, text, x, y, spacing = 1, options = {}) {
   }
 }
 
+function drawLeftColText(
+  doc, text, rightX, leftX, y, fontSize, fontStyle, color, lineHeight = 14
+) {
+  if (!text) return 0;
+  doc.setFontSize(fontSize);
+  doc.setFont("helvetica", fontStyle);
+  doc.setTextColor(...color);
+  return drawRightAlignedBlock(doc, text, rightX, leftX, y, lineHeight);
+}
 
 export function generateTemplate9PDF(resume) {
   const doc = new jsPDF("portrait", "pt", "letter");
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
-  // Colors & Fonts
-  const highlightColor = [222, 222, 222]; // Greenish color for lines and bullets (from Template5)
-  const headingColor = [0, 0, 0];       // Black for headings (from Template5)
-  const bodyTextColor = [74, 68, 68];   // Dark gray for body text (from Template5)
-  const bulletColor = [0, 0, 0];   // Green for bullets (matching the attached template)
+  const highlightColor = [222, 222, 222];
+  const headingColor = [0, 0, 0];
+  const bodyTextColor = [74, 68, 68];
 
-  // Define Left columns
-  const leftColumnWidth = pageWidth / 2 - 140; // Further reduced width to prevent overlap
-
-  // Margins & positions
-  let currentY = 50;
-  const leftMargin = 40; // Moved left margin more to the left
-  let leftY = 80;  // starting Y position for left column
-  let rightY = 80; // starting Y position for right column
-  const lineHeight = 18;
-  const sectionGap = 25; // Reduced section gap
-
-  // -------------------------
-  // HEADER: Name, Contact Info
-  // -------------------------
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(26);
-  doc.setTextColor(...headingColor); // Name in black to match the attached template
-  // Candidate name centered
-  const nameText = resume.name || "DEBRA NELSON";
-  const textWidth =
-    (doc.getStringUnitWidth(nameText) * doc.internal.getFontSize()) /
-    doc.internal.scaleFactor;
-  const xCentered = (pageWidth - textWidth) / 2;
-
-  doc.text(nameText, xCentered, currentY);
-  currentY += 50;
-
-  // Draw a vertical line between left and right columns
-  doc.setDrawColor(...highlightColor); // Light gray color
-  doc.setLineWidth(2);
-  // Moved the vertical divider line slightly left to create more space for right column
-  const dividerPosition = pageWidth / 2 - 80;
-  doc.line(dividerPosition, currentY, dividerPosition, pageHeight - 40);
-
-  // Contact Information 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(...headingColor);
+  const leftMargin = 40;
+  const leftColumnWidth = pageWidth / 2 - 140;
   const leftColumnRightEdge = leftMargin + leftColumnWidth;
+  const sectionGap = 25;
 
-  // Contact Heading
-  drawSpacedText(
-    doc,
-    "CONTACT",
-    leftColumnRightEdge,
-    currentY + 10,
-    1.5, // letter spacing (adjust if needed)
-    { align: "right" }
-  );
+  const dividerPosition = pageWidth / 2 - 80;
+  const rightColumnStartX = dividerPosition + 30;
+  const rightColumnRightEdge = pageWidth - 40;
+  const rightColumnWidth = rightColumnRightEdge - rightColumnStartX;
 
-  currentY += 20;
+  let currentY = 50;
+  let leftColY = 0;
+  let rightColY = 0;
 
-  // Horizontal Line
-  doc.setDrawColor(...highlightColor); // set color
-  doc.setLineWidth(2);                 // thickness
-  doc.line(leftMargin, currentY, leftColumnRightEdge, currentY); // from left margin to right margin
-  currentY += 15;
+  // Track total pages used by left column
+  let leftColumnPages = 1;
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.setTextColor(...bodyTextColor);
+  const checkLeftPageBreak = (y, needed = 20) => {
+    if (y + needed > pageHeight - 40) {
+      leftColumnPages++;
+      doc.addPage();
+      doc.setDrawColor(...highlightColor);
+      doc.setLineWidth(2);
+      doc.line(dividerPosition, 40, dividerPosition, pageHeight - 40);
+      return 60;
+    }
+    return y;
+  };
 
-  // Email Address
-  drawSpacedText(
-    doc,
-    resume.email,
-    leftColumnRightEdge,
-    currentY + 10,
-    1, // letter spacing (adjust if needed)
-    { align: "right" }
-  );
+  const checkRightPageBreak = (y, needed = 20) => {
+    if (y + needed > pageHeight - 40) {
+      doc.addPage();
+      doc.setDrawColor(...highlightColor);
+      doc.setLineWidth(2);
+      doc.line(dividerPosition, 40, dividerPosition, pageHeight - 40);
+      return 60;
+    }
+    return y;
+  };
 
-  currentY += 15;
-
-  // Phone Number
-  drawSpacedText(
-    doc,
-    resume.phone,
-    leftColumnRightEdge,
-    currentY + 10,
-    1, // letter spacing (adjust if needed)
-    { align: "right" }
-  );
-
-  currentY += 15;
-
-  currentY += drawRightAlignedBlock(
-    doc,
-    resume.address,
-    leftColumnRightEdge, // SAME edge as email & phone
-    leftMargin,          // SAME left boundary as line
-    currentY + 10,
-    14
-  );
-
-  currentY += sectionGap + 10;
-
-
-  // Education Heading
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(...headingColor);
-
-  drawSpacedText(
-    doc,
-    "EDUCATION",
-    leftColumnRightEdge,
-    currentY + 10,
-    1.5, // letter spacing (adjust if needed)
-    { align: "right" }
-  );
-
-  currentY += 20;
-
-  doc.setDrawColor(...highlightColor); // set color
-  doc.setLineWidth(2);                 // thickness
-  doc.line(leftMargin, currentY, leftColumnRightEdge, currentY); // for Left Column
-  currentY += 15;
-
-  //Education Content
-  resume.education.forEach((edu) => {
-    // Degree (Bold, size 10)
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...headingColor);
-    doc.setFontSize(10);
-
-    drawSpacedText(
-      doc,
-      edu.degree,
-      leftColumnRightEdge,
-      currentY + 10,
-      0.5,
-      { align: "right" }
-    );
-
-    currentY += 15;
-
-    // School + Graduation Year (Normal, size 9)
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...bodyTextColor);
-    doc.setFontSize(10);
-
-    drawSpacedText(
-      doc,
-      edu.school,
-      leftColumnRightEdge,
-      currentY + 10,
-      0.5,
-      { align: "right" }
-    );
-
-    currentY += 15;
-
-    drawSpacedText(
-      doc,
-      edu.graduationYear,
-      leftColumnRightEdge,
-      currentY + 10,
-      0.5,
-      { align: "right" }
-    );
-
-    currentY += 20;
-
-  });
-
-  currentY += 10;
-
-  // Skills Heading
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(...headingColor);
-
-  drawSpacedText(
-    doc,
-    "SKILLS",
-    leftColumnRightEdge,
-    currentY + 10,
-    1.5, // letter spacing (adjust if needed)
-    { align: "right" }
-  );
-
-  currentY += 20;
-
-  doc.setDrawColor(...highlightColor); // set color
-  doc.setLineWidth(2);                 // thickness
-  doc.line(leftMargin, currentY, leftColumnRightEdge, currentY); // for Left Column
-  currentY += 15;
-
-  // Skills Section
-
-  resume.skills.forEach((skill) => {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(...bodyTextColor);
-    drawSpacedText(
-      doc,
-      skill,
-      leftColumnRightEdge,
-      currentY + 10,
-      1.5, // letter spacing (adjust if needed)
-      { align: "right" }
-    );
-    currentY += 15;
-  })
-
-  currentY += 15;
-
-  if( resume.additionalContent?.languages &&
-    resume.additionalContent.languages.length > 0){
-    // Languages Heading
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(...headingColor);
-
-  drawSpacedText(
-    doc,
-    "LANGUAGES",
-    leftColumnRightEdge,
-    currentY + 10,
-    1.5, // letter spacing (adjust if needed)
-    { align: "right" }
-  );
-
-  currentY += 20;
-
-  doc.setDrawColor(...highlightColor); // set color
-  doc.setLineWidth(2);                 // thickness
-  doc.line(leftMargin, currentY, leftColumnRightEdge, currentY); // for Left Column
-  currentY += 15;
-
-  // Languages Section
-
-  resume.additionalContent.languages.forEach((lang) => {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(...bodyTextColor);
-    drawSpacedText(
-      doc,
-      lang,
-      leftColumnRightEdge,
-      currentY + 10,
-      1.5, // letter spacing (adjust if needed)
-      { align: "right" }
-    );
-    currentY += 15;
-  })
-  }
-  currentY += 15;
-
-  if( resume.additionalContent?.references &&
-    resume.additionalContent.references.length > 0){
-    // References Heading
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(...headingColor);
-
-  drawSpacedText(
-    doc,
-    "REFERENCES",
-    leftColumnRightEdge,
-    currentY + 10,
-    1.5, // letter spacing (adjust if needed)
-    { align: "right" }
-  );
-
-  currentY += 20;
-
-  doc.setDrawColor(...highlightColor); // set color
-  doc.setLineWidth(2);                 // thickness
-  doc.line(leftMargin, currentY, leftColumnRightEdge, currentY); // for Left Column
-  currentY += 15;
-
-  // References Section
-
-  resume.additionalContent.references.forEach((ref) => {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(...bodyTextColor);
-    drawSpacedText(
-      doc,
-      ref.name,
-      leftColumnRightEdge,
-      currentY + 10,
-      1.5, // letter spacing (adjust if needed)
-      { align: "right" }
-    );
-    currentY += 15;
-    drawSpacedText(
-      doc,
-      ref.contact,
-      leftColumnRightEdge,
-      currentY + 10,
-      1.5, // letter spacing (adjust if needed)
-      { align: "right" }
-    );
-    currentY += 10;
-  })
-  }
-
-  const rightColumnStartX = dividerPosition + 30; // padding from divider
-  const rightColumnRightEdge = pageWidth - 40;    // right page margin
-  const rightColumnWidth = rightColumnRightEdge - rightColumnStartX; // Define Right Column
-  currentY = 110;
-
-  // Summary Heading
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(...headingColor);
-
-  drawSpacedText(
-    doc,
-    "SUMMARY",
-    rightColumnStartX,
-    currentY,
-    1.5 // letter spacing
-  );
-
-  currentY += 10;
-
-  doc.setDrawColor(...highlightColor);
-  doc.setLineWidth(2);
-  doc.line(
-    rightColumnStartX,
-    currentY,
-    rightColumnRightEdge,
-    currentY
-  );
-
-  currentY += 25;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.setTextColor(...bodyTextColor);
-
-  const summaryText = resume.summary || "";
-  const lineSpacing = 15; // 🔹 adjust this for more/less space
-
-  const summaryLines = doc.splitTextToSize(
-    summaryText,
-    rightColumnWidth
-  );
-
-  summaryLines.forEach((line, index) => {
-    doc.text(
-      line,
-      rightColumnStartX,
-      currentY + index * lineSpacing
-    );
-  });
-
-  // Move cursor after summary block
-  currentY += (summaryLines.length * lineSpacing) + 20 ;
-
-   // Experience Heading
-   doc.setFont("helvetica", "bold");
-   doc.setFontSize(11);
-   doc.setTextColor(...headingColor);
- 
-   drawSpacedText(
-     doc,
-     "PROFESSIONAL EXPERIENCE",
-     rightColumnStartX,
-     currentY,
-     1.5 // letter spacing
-   );
- 
-   currentY += 10;
- 
-   doc.setDrawColor(...highlightColor);
-   doc.setLineWidth(2);
-   doc.line(
-     rightColumnStartX,
-     currentY,
-     rightColumnRightEdge,
-     currentY
-   );
- 
-   currentY += 25;
-
-   resume.workExperience.forEach((exp) => {
-
-    // 1️⃣ Job Title (Bold)
+  const drawLeftSectionHeading = (title, y) => {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(...headingColor);
-  
-    doc.text(
-      exp.jobTitle,
-      rightColumnStartX,
-      currentY
+    drawSpacedText(doc, title, leftColumnRightEdge, y + 10, 1.5, { align: "right" });
+    y += 20;
+    doc.setDrawColor(...highlightColor);
+    doc.setLineWidth(2);
+    doc.line(leftMargin, y, leftColumnRightEdge, y);
+    y += 15;
+    return y;
+  };
+
+  // -------------------------
+  // HEADER
+  // -------------------------
+  if (resume.name) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(26);
+    doc.setTextColor(...headingColor);
+    const textWidth =
+      (doc.getStringUnitWidth(resume.name) * doc.internal.getFontSize()) /
+      doc.internal.scaleFactor;
+    const xCentered = (pageWidth - textWidth) / 2;
+    doc.text(resume.name, xCentered, currentY);
+  }
+  currentY += 50;
+
+  // Draw divider on page 1
+  doc.setDrawColor(...highlightColor);
+  doc.setLineWidth(2);
+  doc.line(dividerPosition, currentY, dividerPosition, pageHeight - 40);
+
+  // Both columns start at same Y — set BEFORE left column runs
+  leftColY = currentY;
+  rightColY = currentY + 10;
+
+  // -------------------------
+  // LEFT COLUMN
+  // -------------------------
+
+  // --- CONTACT ---
+  leftColY = drawLeftSectionHeading("CONTACT", leftColY);
+
+  if (resume.email) {
+    leftColY = checkLeftPageBreak(leftColY);
+    const used = drawLeftColText(
+      doc, resume.email, leftColumnRightEdge, leftMargin,
+      leftColY + 10, 10, "normal", bodyTextColor, 13
     );
-  
-    currentY += 16;
-  
-    // 2️⃣ Company / Dates (Normal)
+    leftColY += used + 4;
+  }
+
+  if (resume.phone) {
+    leftColY = checkLeftPageBreak(leftColY);
+    const used = drawLeftColText(
+      doc, resume.phone, leftColumnRightEdge, leftMargin,
+      leftColY + 10, 10, "normal", bodyTextColor, 13
+    );
+    leftColY += used + 4;
+  }
+
+  if (resume.address) {
+    leftColY = checkLeftPageBreak(leftColY);
+    const used = drawLeftColText(
+      doc, resume.address, leftColumnRightEdge, leftMargin,
+      leftColY + 10, 10, "normal", bodyTextColor, 13
+    );
+    leftColY += used + 4;
+  }
+
+  leftColY += sectionGap;
+
+  // --- EDUCATION ---
+  if (resume.education && resume.education.length > 0) {
+    leftColY = checkLeftPageBreak(leftColY, 40);
+    leftColY = drawLeftSectionHeading("EDUCATION", leftColY);
+
+    resume.education.forEach((edu) => {
+      if (edu.degree) {
+        leftColY = checkLeftPageBreak(leftColY);
+        const used = drawLeftColText(
+          doc, edu.degree, leftColumnRightEdge, leftMargin,
+          leftColY + 10, 10, "bold", headingColor, 13
+        );
+        leftColY += used + 4;
+      }
+
+      if (edu.school) {
+        leftColY = checkLeftPageBreak(leftColY);
+        const used = drawLeftColText(
+          doc, edu.school, leftColumnRightEdge, leftMargin,
+          leftColY + 10, 10, "normal", bodyTextColor, 13
+        );
+        leftColY += used + 4;
+      }
+
+      if (edu.graduationYear) {
+        leftColY = checkLeftPageBreak(leftColY);
+        const used = drawLeftColText(
+          doc, edu.graduationYear, leftColumnRightEdge, leftMargin,
+          leftColY + 10, 10, "normal", bodyTextColor, 13
+        );
+        leftColY += used + 4;
+      }
+
+      if (edu.gradeType && (edu.gradeValue || edu.obtainedMarks)) {
+        let gradeText = "";
+        if (edu.gradeType === "cgpa" && edu.gradeValue) {
+          gradeText = `CGPA: ${edu.gradeValue}/${edu.totalMarks || "4.0"}`;
+        } else if (edu.gradeType === "percentage") {
+          if (edu.obtainedMarks && edu.totalMarks) {
+            const pct = ((edu.obtainedMarks / edu.totalMarks) * 100).toFixed(1);
+            gradeText = `Marks: ${edu.obtainedMarks}/${edu.totalMarks} (${pct}%)`;
+          } else if (edu.gradeValue) {
+            gradeText = `${edu.gradeValue}%`;
+          }
+        } else if (edu.gradeType === "grades" && edu.gradeValue) {
+          gradeText = `Grade: ${edu.gradeValue}`;
+        }
+
+        if (gradeText) {
+          leftColY = checkLeftPageBreak(leftColY);
+          const used = drawLeftColText(
+            doc, gradeText, leftColumnRightEdge, leftMargin,
+            leftColY + 10, 9, "normal", [130, 130, 130], 13
+          );
+          leftColY += used + 4;
+        }
+      }
+
+      leftColY += 8;
+    });
+
+    leftColY += 10;
+  }
+
+  // --- SKILLS ---
+  if (resume.skills && resume.skills.length > 0) {
+    leftColY = checkLeftPageBreak(leftColY, 40);
+    leftColY = drawLeftSectionHeading("SKILLS", leftColY);
+
+    resume.skills.forEach((skill) => {
+      leftColY = checkLeftPageBreak(leftColY);
+      const used = drawLeftColText(
+        doc, skill, leftColumnRightEdge, leftMargin,
+        leftColY + 10, 10, "normal", bodyTextColor, 13
+      );
+      leftColY += used + 4;
+    });
+
+    leftColY += 15;
+  }
+
+  // --- LANGUAGES ---
+  if (
+    resume.additionalContent?.languages &&
+    resume.additionalContent.languages.length > 0
+  ) {
+    leftColY = checkLeftPageBreak(leftColY, 40);
+    leftColY = drawLeftSectionHeading("LANGUAGES", leftColY);
+
+    resume.additionalContent.languages.forEach((lang) => {
+      leftColY = checkLeftPageBreak(leftColY);
+      const used = drawLeftColText(
+        doc, lang, leftColumnRightEdge, leftMargin,
+        leftColY + 10, 10, "normal", bodyTextColor, 13
+      );
+      leftColY += used + 4;
+    });
+
+    leftColY += 15;
+  }
+
+  // --- REFERENCES ---
+  if (
+    resume.additionalContent?.references &&
+    resume.additionalContent.references.length > 0
+  ) {
+    leftColY = checkLeftPageBreak(leftColY, 40);
+    leftColY = drawLeftSectionHeading("REFERENCES", leftColY);
+
+    resume.additionalContent.references.forEach((ref) => {
+      if (ref.name) {
+        leftColY = checkLeftPageBreak(leftColY);
+        const used = drawLeftColText(
+          doc, ref.name, leftColumnRightEdge, leftMargin,
+          leftColY + 10, 10, "bold", headingColor, 13
+        );
+        leftColY += used + 4;
+      }
+
+      if (ref.contact) {
+        leftColY = checkLeftPageBreak(leftColY);
+        const used = drawLeftColText(
+          doc, ref.contact, leftColumnRightEdge, leftMargin,
+          leftColY + 10, 10, "normal", bodyTextColor, 13
+        );
+        leftColY += used + 4;
+      }
+
+      leftColY += 6;
+    });
+  }
+
+  // -------------------------
+  // RIGHT COLUMN
+  // Switch back to page 1 since left column may have added pages
+  // -------------------------
+  doc.setPage(1);
+  rightColY = currentY + 10;
+
+  const drawRightSectionHeading = (title) => {
+    rightColY = checkRightPageBreak(rightColY, 40);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...headingColor);
+    drawSpacedText(doc, title, rightColumnStartX, rightColY, 1.5);
+    rightColY += 10;
+    doc.setDrawColor(...highlightColor);
+    doc.setLineWidth(2);
+    doc.line(rightColumnStartX, rightColY, rightColumnRightEdge, rightColY);
+    rightColY += 25;
+  };
+
+  // --- SUMMARY ---
+  if (resume.summary) {
+    drawRightSectionHeading("SUMMARY");
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(...bodyTextColor);
-  
-    const companyLine = `${exp.company} / ${exp.startDate} - ${exp.endDate}`;
-  
-    doc.text(
-      companyLine,
-      rightColumnStartX,
-      currentY
-    );
-  
-    currentY += 18;
-  
-    // 3️⃣ Responsibilities (Bulleted)
-    const bullets = (exp.responsibilities || "").split("\n");
-  
-    bullets.forEach((point) => {
-      if (!point.trim()) return;
-  
-      const bulletX = rightColumnStartX;
-      const textX = rightColumnStartX + 10;
-      const bulletWidth = rightColumnWidth - 10;
-  
-      // Bullet dot
-      doc.setFontSize(10);
-      doc.text("•", bulletX, currentY);
-  
-      // Wrapped bullet text
-      const wrappedLines = doc.splitTextToSize(
-        point,
-        bulletWidth
-      );
-  
-      wrappedLines.forEach((line, i) => {
-        doc.text(
-          line,
-          textX,
-          currentY + i * 14
-        );
-      });
-  
-      currentY += wrappedLines.length * 14 + 4;
+
+    const summaryLines = doc.splitTextToSize(resume.summary, rightColumnWidth);
+    summaryLines.forEach((line) => {
+      rightColY = checkRightPageBreak(rightColY);
+      doc.text(line, rightColumnStartX, rightColY);
+      rightColY += 15;
     });
-  
-    currentY += 5; // space between experiences
-  });
+
+    rightColY += 20;
+  }
+
+  // --- EXPERIENCE ---
+  if (resume.workExperience && resume.workExperience.length > 0) {
+    drawRightSectionHeading("PROFESSIONAL EXPERIENCE");
+
+    resume.workExperience.forEach((exp) => {
+      rightColY = checkRightPageBreak(rightColY, 40);
+
+      if (exp.jobTitle) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(...headingColor);
+        const titleLines = doc.splitTextToSize(exp.jobTitle, rightColumnWidth);
+        titleLines.forEach((line) => {
+          rightColY = checkRightPageBreak(rightColY);
+          doc.text(line, rightColumnStartX, rightColY);
+          rightColY += 15;
+        });
+      }
+
+      if (exp.company || exp.startDate || exp.endDate) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(...bodyTextColor);
+        const companyLine = [
+          exp.company,
+          `${exp.startDate || ""} - ${exp.endDate || ""}`,
+        ]
+          .filter(Boolean)
+          .join(" / ");
+        const wrappedCompany = doc.splitTextToSize(
+          companyLine,
+          rightColumnWidth
+        );
+        wrappedCompany.forEach((line) => {
+          rightColY = checkRightPageBreak(rightColY);
+          doc.text(line, rightColumnStartX, rightColY);
+          rightColY += 15;
+        });
+        rightColY += 3;
+      }
+
+      if (exp.responsibilities) {
+        const bullets =
+          typeof exp.responsibilities === "string"
+            ? exp.responsibilities.split("\n").filter((p) => p.trim())
+            : Array.isArray(exp.responsibilities)
+            ? exp.responsibilities.flatMap((p) =>
+                p.split("\n").filter((l) => l.trim())
+              )
+            : [];
+
+        bullets.forEach((point) => {
+          if (!point.trim()) return;
+          const wrappedLines = doc.splitTextToSize(
+            point.trim(),
+            rightColumnWidth - 10
+          );
+          wrappedLines.forEach((line, i) => {
+            rightColY = checkRightPageBreak(rightColY);
+            doc.setFontSize(10);
+            doc.setTextColor(...bodyTextColor);
+            if (i === 0) {
+              doc.text("-", rightColumnStartX, rightColY);
+              doc.text(line, rightColumnStartX + 10, rightColY);
+            } else {
+              doc.text(line, rightColumnStartX + 10, rightColY);
+            }
+            rightColY += 14;
+          });
+          rightColY += 4;
+        });
+      }
+
+      rightColY += 5;
+    });
+  }
+
+  // --- DISTINCTIONS ---
+  if (resume.distinctions && resume.distinctions.length > 0) {
+    drawRightSectionHeading("DISTINCTIONS");
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(...bodyTextColor);
+
+    resume.distinctions.forEach((dist) => {
+      if (!dist.title) return;
+      const line = dist.year
+        ? `${dist.title} (${dist.year})`
+        : dist.title;
+      const wrappedLines = doc.splitTextToSize(line, rightColumnWidth - 10);
+      wrappedLines.forEach((l, i) => {
+        rightColY = checkRightPageBreak(rightColY);
+        if (i === 0) {
+          doc.text("-", rightColumnStartX, rightColY);
+          doc.text(l, rightColumnStartX + 10, rightColY);
+        } else {
+          doc.text(l, rightColumnStartX + 10, rightColY);
+        }
+        rightColY += 14;
+      });
+      rightColY += 4;
+    });
+  }
 
   return doc;
 }

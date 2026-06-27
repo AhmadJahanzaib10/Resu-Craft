@@ -51,7 +51,7 @@ app.post('/webhook', express.raw({type: 'application/json'}), async (request, re
 
       console.log(`🔥 User ${userId} subscription updated in Firebase.`);
     } catch (error) {
-      console.error('❌ Firebase update failed:', error);
+      console.error("❌ Firebase update failed. Error details:", JSON.stringify(error, null, 2));
     }
   } else {
     console.log(`Unhandled event type ${event.type}`);

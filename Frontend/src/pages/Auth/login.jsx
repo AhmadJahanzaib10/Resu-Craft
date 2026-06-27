@@ -166,7 +166,7 @@ const Login = () => {
         {/* <img src={mockLogo} alt="Logo" className="w-20 h-20 mx-auto" /> */}
         <div className="text-center mb-6">
           <h2 className="text-4xl font-bold text-primary font-outfit relative inline-block">
-            Resume Shaper AI
+            Resu Craft
             <svg className="absolute w-full" style={{ bottom: "-8px", left: "0" }} viewBox="0 0 200 8" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M 0 4 C 40 0, 60 8, 100 4 C 140 0, 160 8, 200 4"

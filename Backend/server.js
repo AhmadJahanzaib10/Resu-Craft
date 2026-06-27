@@ -11,6 +11,7 @@ dotenv.config();
 const app = express();
 app.use(cors({ origin: "*" }));
 
+const stripe = Stripe(process.env.STRIPE_API_SECRET_KEY);
 // This is your Stripe CLI webhook secret for testing your endpoint locally.
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -44,6 +45,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (request, 
       // Reference to your Realtime Database
       const db = admin.database();
       const userRef = db.ref(`users/${userId}/subscription`);
+      const subscriptionRef = db.ref(`subscriptions/${subscriptionId}`);
 
       // Determine endDate based on planName
       const startDate = new Date();
@@ -60,15 +62,29 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (request, 
         endDate.setDate(startDate.getDate() + 7);
       }
 
-      // Update subscription info according to your schema
-      await userRef.update({
-        plan: planName, // optional fallback
+      console.log('subscriptionId:', subscriptionId);
+      console.log('customerId:', customerId);
+      console.log('userId:', userId);
+
+      const subscriptionData = {
+        plan: planName,
         status: 'active',
-        startDate: startDate,
-        endDate: endDate,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscriptionId,
-      });
+        cancelAt: null, 
+      };
+
+      // Run both writes concurrently
+      await Promise.all([
+        userRef.set(subscriptionData),
+        subscriptionRef.set({          // write to subscriptions table
+          ...subscriptionData,
+          userId,                      // link back to the user
+          createdAt: new Date().toISOString(),
+        }),
+      ]);
 
 
       console.log(`🔥 User ${userId} subscription updated in Firebase.`);
@@ -76,22 +92,22 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (request, 
       console.error('❌ Firebase update failed:', error);
     }
   }
-  if (event.type === "customer.subscription.deleted") {
+  else if (event.type === "customer.subscription.deleted") {
     const subscription = event.data.object;
     const customerId = subscription.customer;
-  
+
     // find user by stripeCustomerId in Firebase
     const db = admin.database();
     const usersRef = db.ref("users");
     const snapshot = await usersRef.once("value");
-  
+
     snapshot.forEach((userSnap) => {
       const sub = userSnap.val().subscription;
       if (sub && sub.stripeCustomerId === customerId) {
         userSnap.ref.child("subscription").update({ status: "canceled" });
       }
     });
-  
+
     console.log(`🛑 Subscription canceled via webhook for customer ${customerId}`);
   }
   else {
@@ -102,9 +118,6 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (request, 
 });
 
 app.use(express.json());
-
-// Initialize Stripe with your secret key
-const stripe = Stripe(process.env.STRIPE_API_SECRET_KEY);
 
 // Swagger Configuration
 const swaggerOptions = {
@@ -146,8 +159,8 @@ app.post("/create-checkout-session", async (req, res) => {
           quantity: 1,
         },
       ],
-      success_url: "https://app.resumeshaperai.com/success",
-      cancel_url: "https://app.resumeshaperai.com/cancel",
+      success_url: "http://localhost:5173/success",
+      cancel_url: "http://localhost:5173/cancel",
       metadata: {
         userId,
         planName,
@@ -179,17 +192,21 @@ app.post("/cancel-subscription", async (req, res) => {
       return res.status(400).json({ error: "No Stripe subscription ID found" });
     }
 
-    // Cancel the subscription immediately or at period end
     const canceledSubscription = await stripe.subscriptions.update(
       stripeSubscriptionId,
-      { cancel_at_period_end: true } // set false to cancel immediately
+      { cancel_at_period_end: true }
     );
 
-    // Update Firebase
-    await userRef.update({
+    const cancelFields = {
       status: "canceled",
       cancelAt: canceledSubscription.cancel_at,
-    });
+    };
+
+    // 👇 update both tables
+    await Promise.all([
+      userRef.update(cancelFields),
+      db.ref(`subscriptions/${stripeSubscriptionId}`).update(cancelFields), // 👈 sync subscriptions table
+    ]);
 
     console.log(`🛑 Subscription canceled for user: ${userId}`);
     res.json({ success: true, canceledSubscription });

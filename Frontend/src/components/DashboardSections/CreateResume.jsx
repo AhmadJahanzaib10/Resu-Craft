@@ -140,9 +140,18 @@ const ResumeBuilder = ({ setActiveSection }) => {
       },
     ],
     // Step 3: Education (multiple entries)
-    education: [{ school: "", degree: "", graduationYear: "" }],
+    education: [{ 
+      school: "", 
+      degree: "", 
+      graduationYear: "",
+      gradeType: "cgpa",   // "cgpa" | "percentage" | "grades"
+      gradeValue: "",      // the actual value
+      totalMarks: "",      // only for matric/inter (e.g. 1100)
+      obtainedMarks: "",   // only for matric/inter
+    }],
     // Step 4: Skills & Summary
     skills: [], // array of skills (max 5)
+    distinctions: [], // { title, issuer, year, description }
     summary: "",
     // Step 5: Additional Content (optional stackable fields)
     additionalContent: {
@@ -213,7 +222,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
     const valid = await validateCurrentStep();
     if (valid) {
       setErrorMessage("");
-      setStep((prev) => Math.min(prev + 1, 8));
+      setStep((prev) => Math.min(prev + 1, 9));
     } else {
       setErrorMessage("Some fields are invalid. Please fix the errors.");
     }
@@ -254,6 +263,18 @@ const ResumeBuilder = ({ setActiveSection }) => {
     [newEdu[index - 1], newEdu[index]] = [newEdu[index], newEdu[index - 1]];
     setResume({ ...resume, education: newEdu });
   };
+  const getEducationLevel = (degree) => {
+    const d = degree.toLowerCase();
+    if (d.includes("matric") || d.includes("ssc") || d.includes("10th") || d.includes("secondary"))
+      return "matric";
+    if (d.includes("inter") || d.includes("hssc") || d.includes("fsc") || d.includes("fa") || d.includes("12th"))
+      return "intermediate";
+    if (d.includes("bachelor") || d.includes("bs") || d.includes("bsc") || d.includes("be") || d.includes("b.tech"))
+      return "bachelors";
+    if (d.includes("master") || d.includes("ms") || d.includes("msc") || d.includes("mba"))
+      return "masters";
+    return null; // unknown, don't show marks fields
+  };
 
   const moveEduDown = (index) => {
     if (index === resume.education.length - 1) return;
@@ -265,13 +286,18 @@ const ResumeBuilder = ({ setActiveSection }) => {
   const generateSuggestions = async () => {
     setLoading(true);
     setErrorMessage("");
-
+  
+    const workExperienceJson = JSON.stringify(resume.workExperience);
+    const educationJson = JSON.stringify(resume.education);
+    const additionalContentJson = JSON.stringify(resume.additionalContent);
+    const skillsJson = JSON.stringify(resume.skills);
+  
     const prompt = `
       Given the following resume details:
       Name: ${resume.name}
-      Work Experience: ${JSON.stringify(resume.workExperience)}
-      Education: ${JSON.stringify(resume.education)}
-      Additional Content: ${JSON.stringify(resume.additionalContent)}
+      Work Experience: ${workExperienceJson}
+      Education: ${educationJson}
+      Additional Content: ${additionalContentJson}
       
       Please output a valid JSON object with exactly two keys:
         "summary" - a concise, professional summary for the candidate.
@@ -283,35 +309,42 @@ const ResumeBuilder = ({ setActiveSection }) => {
         "skills": ["JavaScript", "React", "Node.js", "Agile Methodologies", "Project Management"]
       }
     `;
-    console.log(import.meta.env.VITE_GEMINI_API_KEY)
-    // Initialize Gemini API
-    const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
+  
     try {
-      const result = await model.generateContent(prompt);
-
-      // Access text from result.response.candidates[0].content.parts[0].text
-      let responseText =
-        result.response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      responseText = responseText.trim();
-
-      if (!responseText) {
-        throw new Error("Gemini returned an empty text field.");
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Groq API error: ${response.status} ${response.statusText}`);
       }
-
-      // In case the response is wrapped in triple backticks, remove them.
+  
+      const data = await response.json();
+      let responseText = data.choices?.[0]?.message?.content || "";
+      responseText = responseText.trim();
+  
+      if (!responseText) {
+        throw new Error("Groq returned an empty response.");
+      }
+  
       if (responseText.startsWith("```")) {
         responseText = responseText.replace(/```json|```/g, "").trim();
       }
-
-      const geminiOutput = JSON.parse(responseText);
-
-      // Update resume state with Gemini output
+  
+      const groqOutput = JSON.parse(responseText);
+  
       setResume((prev) => ({
         ...prev,
-        summary: geminiOutput.summary || prev.summary,
-        skills: geminiOutput.skills || prev.skills,
+        summary: groqOutput.summary || prev.summary,
+        skills: groqOutput.skills || prev.skills,
       }));
     } catch (error) {
       console.error("Error generating suggestions:", error);
@@ -320,19 +353,15 @@ const ResumeBuilder = ({ setActiveSection }) => {
       setLoading(false);
     }
   };
-
-  // Dummy AI optimization for Step 7
+  
   const optimizeResume = async () => {
     setLoading(true);
     setErrorMessage("");
-
-    // Create a base resume with the user's existing data
+  
     const baseResume = { ...resume };
-
-    // If resume fields are empty, add placeholder data for better AI generation
+  
     if (!baseResume.name) baseResume.name = "John Smith";
-
-    // If work experience is empty or has no content, add a sample position
+  
     if (
       baseResume.workExperience.length === 0 ||
       (baseResume.workExperience.length === 1 &&
@@ -349,8 +378,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
         },
       ];
     }
-
-    // If education is empty or has no content, add a sample education
+  
     if (
       baseResume.education.length === 0 ||
       (baseResume.education.length === 1 &&
@@ -365,27 +393,29 @@ const ResumeBuilder = ({ setActiveSection }) => {
         },
       ];
     }
-
-    // Optimized prompt instructing Gemini to rework the entire resume.
+  
+    const workExperienceJson = JSON.stringify(
+      baseResume.workExperience.map((exp) => ({
+        ...exp,
+        duration: `${exp.startDate} - ${exp.endDate}`,
+      }))
+    );
+    const educationJson = JSON.stringify(baseResume.education);
+    const additionalContentJson = JSON.stringify(baseResume.additionalContent);
+    const skillsJson = JSON.stringify(
+      baseResume.skills.length > 0 ? baseResume.skills : ["No skills provided"]
+    );
+    const summary = baseResume.summary || "No summary provided";
+  
     const prompt = `
       You are an expert resume optimizer.
       Given the following resume details:
       - Name: ${baseResume.name}
-      - Work Experience: ${JSON.stringify(
-      baseResume.workExperience.map((exp) => ({
-        ...exp,
-        // Combine start and end dates for the prompt
-        duration: `${exp.startDate} - ${exp.endDate}`,
-      }))
-    )}
-      - Education: ${JSON.stringify(baseResume.education)}
-      - Additional Content: ${JSON.stringify(baseResume.additionalContent)}
-      - Current Summary: ${baseResume.summary || "No summary provided"}
-      - Current Skills: ${JSON.stringify(
-      baseResume.skills.length > 0
-        ? baseResume.skills
-        : ["No skills provided"]
-    )}
+      - Work Experience: ${workExperienceJson}
+      - Education: ${educationJson}
+      - Additional Content: ${additionalContentJson}
+      - Current Summary: ${summary}
+      - Current Skills: ${skillsJson}
       
       Please optimize and create a complete resume.
       Return a valid JSON object with exactly four keys:
@@ -419,40 +449,41 @@ const ResumeBuilder = ({ setActiveSection }) => {
         ]
       }
     `;
-    // Initialize Gemini API
-    const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
+  
     try {
-      const result = await model.generateContent(prompt);
-
-      // Access the response text from result.response.candidates[0].content.parts[0].text
-      let responseText =
-        result.response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      responseText = responseText.trim();
-
-      if (!responseText) {
-        throw new Error("Gemini returned an empty text field.");
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Groq API error: ${response.status} ${response.statusText}`);
       }
-
-      // In case the response is wrapped in triple backticks, remove them.
+  
+      const data = await response.json();
+      let responseText = data.choices?.[0]?.message?.content || "";
+      responseText = responseText.trim();
+  
+      if (!responseText) {
+        throw new Error("Groq returned an empty response.");
+      }
+  
       if (responseText.startsWith("```")) {
         responseText = responseText.replace(/```json|```/g, "").trim();
       }
-
-      const geminiOutput = JSON.parse(responseText);
-      const responsibiltiesString = geminiOutput.workExperience[0].responsibilities.join("\n")
-      geminiOutput.workExperience[0].responsibilities = responsibiltiesString;
-
-      // Update the resume state with the optimized values from Gemini
-      // setResume((prev) => ({
-      //   ...prev,
-      //   summary: geminiOutput.summary || prev.summary,
-      //   skills: geminiOutput.skills || prev.skills,
-      //   workExperience: geminiOutput.workExperience || prev.workExperience,
-      //   education: geminiOutput.education || prev.education,
-      // }));
-      setAiResume(geminiOutput);
+  
+      const groqOutput = JSON.parse(responseText);
+      const responsibilitiesString = groqOutput.workExperience[0].responsibilities.join("\n");
+      groqOutput.workExperience[0].responsibilities = responsibilitiesString;
+  
+      setAiResume(groqOutput);
       setShowOptimizeModal(true);
     } catch (error) {
       console.error("Error optimizing resume:", error);
@@ -684,10 +715,190 @@ const ResumeBuilder = ({ setActiveSection }) => {
   };
 
   useEffect(() => {
-    if (step === 8) {
+    if (step === 9) {
+      console.log(resume)
       generatePDFPreview();
     }
   }, [step]);
+
+  const GradeInput = ({ edu, index, resume, setResume }) => {
+    const level = getEducationLevel(edu.degree);
+    if (!level) return null; // don't show if degree not recognized
+  
+    const isMatricOrInter = level === "matric" || level === "intermediate";
+    const isBachelorsOrAbove = level === "bachelors" || level === "masters";
+  
+    const updateEdu = (field, value) => {
+      const newEdu = [...resume.education];
+      newEdu[index][field] = value;
+      setResume({ ...resume, education: newEdu });
+    };
+  
+    return (
+      <div className="md:col-span-2 mt-2 p-3 bg-blue-50/60 rounded-md border border-blue-100">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Academic Performance
+        </label>
+  
+        {/* Grade type toggle */}
+        <div className="flex gap-2 mb-3">
+          {isMatricOrInter && (
+            <>
+              <button
+                type="button"
+                onClick={() => updateEdu("gradeType", "percentage")}
+                className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                  edu.gradeType === "percentage"
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white text-gray-600 border-gray-300 hover:border-primary"
+                }`}
+              >
+                Marks / Percentage
+              </button>
+              <button
+                type="button"
+                onClick={() => updateEdu("gradeType", "grades")}
+                className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                  edu.gradeType === "grades"
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white text-gray-600 border-gray-300 hover:border-primary"
+                }`}
+              >
+                Grades (A, B+)
+              </button>
+            </>
+          )}
+          {isBachelorsOrAbove && (
+            <>
+              <button
+                type="button"
+                onClick={() => updateEdu("gradeType", "cgpa")}
+                className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                  edu.gradeType === "cgpa"
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white text-gray-600 border-gray-300 hover:border-primary"
+                }`}
+              >
+                CGPA
+              </button>
+              <button
+                type="button"
+                onClick={() => updateEdu("gradeType", "percentage")}
+                className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                  edu.gradeType === "percentage"
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white text-gray-600 border-gray-300 hover:border-primary"
+                }`}
+              >
+                Percentage
+              </button>
+            </>
+          )}
+        </div>
+  
+        {/* Marks input for matric/inter */}
+        {isMatricOrInter && edu.gradeType === "percentage" && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">
+                Obtained Marks
+              </label>
+              <input
+                type="number"
+                placeholder="e.g. 950"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30 text-sm"
+                value={edu.obtainedMarks || ""}
+                onChange={(e) => updateEdu("obtainedMarks", e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">
+                Total Marks
+              </label>
+              <input
+                type="number"
+                placeholder="e.g. 1100"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30 text-sm"
+                value={edu.totalMarks || ""}
+                onChange={(e) => updateEdu("totalMarks", e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+  
+        {/* Grade letter input */}
+        {edu.gradeType === "grades" && (
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Grade</label>
+            <input
+              type="text"
+              placeholder="e.g. A, B+, A-"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30 text-sm"
+              value={edu.gradeValue || ""}
+              onChange={(e) => updateEdu("gradeValue", e.target.value)}
+            />
+          </div>
+        )}
+  
+        {/* CGPA input for bachelors/masters */}
+        {isBachelorsOrAbove && edu.gradeType === "cgpa" && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">CGPA</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="4"
+                placeholder="e.g. 3.75"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30 text-sm"
+                value={edu.gradeValue || ""}
+                onChange={(e) => updateEdu("gradeValue", e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">
+                Scale (out of)
+              </label>
+              <select
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30 text-sm"
+                value={edu.totalMarks || "4.0"}
+                onChange={(e) => updateEdu("totalMarks", e.target.value)}
+              >
+                <option value="4.0">4.0</option>
+                <option value="5.0">5.0</option>
+              </select>
+            </div>
+          </div>
+        )}
+  
+        {/* Percentage for bachelors/masters */}
+        {isBachelorsOrAbove && edu.gradeType === "percentage" && (
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">
+              Percentage (%)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              placeholder="e.g. 85"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30 text-sm"
+              value={edu.gradeValue || ""}
+              onChange={(e) => updateEdu("gradeValue", e.target.value)}
+            />
+          </div>
+        )}
+  
+        {/* Helper text */}
+        <p className="text-xs text-gray-400 mt-2">
+          {isMatricOrInter
+            ? "Enter your Matric/Inter result. Leave blank if not applicable."
+            : "Enter your university grade. Leave blank if not yet available."}
+        </p>
+      </div>
+    );
+  };
 
   // ------------------------
   // Render Steps
@@ -1110,21 +1321,26 @@ const ResumeBuilder = ({ setActiveSection }) => {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Degree
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Degree"
-                      className="w-full px-4 py-2.5 bg-gray-50/70 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
-                      value={edu.degree}
-                      onChange={(e) => {
-                        const newEdu = [...resume.education];
-                        newEdu[index].degree = e.target.value;
-                        setResume({ ...resume, education: newEdu });
-                      }}
-                    />
-                  </div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">Degree</label>
+  <input
+    type="text"
+    placeholder="e.g., BSc Computer Science, Matric, FSc"
+    className="w-full px-4 py-2.5 bg-gray-50/70 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
+    value={edu.degree}
+    onChange={(e) => {
+      const newEdu = [...resume.education];
+      newEdu[index].degree = e.target.value;
+      newEdu[index].gradeType = "cgpa";
+      newEdu[index].gradeValue = "";
+      newEdu[index].totalMarks = "";
+      newEdu[index].obtainedMarks = "";
+      setResume({ ...resume, education: newEdu });
+    }}
+  />
+</div>
+
+{/* Grade Component */}
+<GradeInput edu={edu} index={index} resume={resume} setResume={setResume} />
                 </div>
               </div>
             ))}
@@ -1136,7 +1352,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
                   ...resume,
                   education: [
                     ...resume.education,
-                    { school: "", degree: "", graduationYear: "" },
+                    { school: "", degree: "", graduationYear: "", gradeType: "cgpa", gradeValue: "", totalMarks: "", obtainedMarks: "" },
                   ],
                 })
               }
@@ -1146,7 +1362,108 @@ const ResumeBuilder = ({ setActiveSection }) => {
             </button>
           </div>
         );
-      case 4:
+        case 4:
+          return (
+            <div className="max-w-3xl mx-auto">
+              <h3 className="text-xl font-medium text-primary mb-2 pb-2 border-b">
+                Step 4: Distinctions & Achievements
+              </h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Add awards, honors, certifications, or any notable achievements. <span className="text-gray-400">(Optional)</span>
+              </p>
+        
+              {resume.distinctions.length === 0 && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-md border border-dashed border-gray-300 text-center text-gray-400 text-sm">
+                  No distinctions added yet. Click below to add one.
+                </div>
+              )}
+        
+              {resume.distinctions.map((dist, index) => (
+                <div key={index} className="mb-4 p-4 bg-white rounded-md shadow-sm">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-medium text-gray-700">Distinction {index + 1}</h4>
+                    <button
+                      className="p-1.5 rounded-md bg-red-50 hover:bg-red-100 transition-colors text-red-500"
+                      onClick={() => {
+                        const updated = resume.distinctions.filter((_, i) => i !== index);
+                        setResume({ ...resume, distinctions: updated });
+                      }}
+                      aria-label="Remove"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+        
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Title / Award Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Dean's List, Best Project Award"
+                        className="w-full px-4 py-2.5 bg-gray-50/70 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
+                        value={dist.title}
+                        onChange={(e) => {
+                          const updated = [...resume.distinctions];
+                          updated[index].title = e.target.value;
+                          setResume({ ...resume, distinctions: updated });
+                        }}
+                      />
+                    </div>
+        
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Issuing Organization</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., University, Google, HEC"
+                        className="w-full px-4 py-2.5 bg-gray-50/70 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
+                        value={dist.issuer}
+                        onChange={(e) => {
+                          const updated = [...resume.distinctions];
+                          updated[index].issuer = e.target.value;
+                          setResume({ ...resume, distinctions: updated });
+                        }}
+                      />
+                    </div>
+        
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., 2023"
+                        className="w-full px-4 py-2.5 bg-gray-50/70 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
+                        value={dist.year}
+                        onChange={(e) => {
+                          const updated = [...resume.distinctions];
+                          updated[index].year = e.target.value;
+                          setResume({ ...resume, distinctions: updated });
+                        }}
+                      />
+                    </div>
+
+                  </div>
+                </div>
+              ))}
+        
+              <button
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+                onClick={() =>
+                  setResume({
+                    ...resume,
+                    distinctions: [
+                      ...resume.distinctions,
+                      { title: "", issuer: "", year: ""},
+                    ],
+                  })
+                }
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Distinction</span>
+              </button>
+            </div>
+          );
+      case 5:
         return (
           <div className="max-w-3xl md:w-xl mx-auto">
             <h3 className="text-xl font-medium text-primary mb-2 pb-2 border-b">
@@ -1252,7 +1569,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
             </button>
           </div>
         );
-      case 5:
+      case 6:
         return (
           <div className="max-w-3xl mx-auto">
             <h3 className="text-xl font-medium text-primary mb-2 pb-2 border-b">
@@ -1476,7 +1793,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
             </div>
           </div>
         );
-      case 6:
+      case 7:
         return (
           <div className="max-w-[1000px] w-[1000px] mob-maxw-100 mx-auto">
             <h3 className="text-xl font-medium text-primary mb-2 pb-2 border-b">
@@ -1523,7 +1840,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
             </div>
           </div>
         );
-      case 7:
+      case 8:
         return (
           <div className="max-w-3xl mx-auto">
             <h3 className="text-xl font-medium text-primary mb-2 pb-2 border-b">
@@ -1971,7 +2288,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
           </div>
         );
 
-      case 8:
+      case 9:
         return (
           <div className="max-w-3xl mx-auto">
             <h3 className="text-xl font-medium text-primary mb-2 pb-2 border-b">
@@ -2058,7 +2375,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
         {/* Progress Bar */}
         <div className="relative w-full h-3 rounded-full bg-gray-100 mb-8 overflow-hidden">
           <div className="absolute h-full top-0 left-0 flex">
-            {Array.from({ length: 8 }).map((_, index) => (
+            {Array.from({ length: 9 }).map((_, index) => (
               <div
                 key={index}
                 className={`h-full w-[4.5rem] md:w-24 ${index < step ? "bg-primary" : "bg-transparent"
@@ -2069,10 +2386,10 @@ const ResumeBuilder = ({ setActiveSection }) => {
           </div>
           <div
             className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-700 ease-out"
-            style={{ width: `${(step / 8) * 100}%` }}
+            style={{ width: `${(step / 9) * 100}%` }}
           />
           <div className="absolute top-0 left-0 w-full h-full flex justify-between px-1">
-            {Array.from({ length: 8 }).map((_, index) => (
+            {Array.from({ length:9 }).map((_, index) => (
               <div
                 key={index}
                 className={`relative h-3 flex items-center justify-center w-6 z-10 ${index < step ? "text-white" : "text-gray-400"
@@ -2140,7 +2457,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
               Back
             </button>
           )}
-          {step < 8 && (
+          {step < 9 && (
             <button
               className="ml-auto px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-2"
               onClick={nextStep}
