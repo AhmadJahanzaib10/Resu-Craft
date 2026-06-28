@@ -3,7 +3,6 @@
 import { jsPDF } from "jspdf";
 
 export function generateTemplate7PDF(resume) {
-  console.log("resume", resume);
   const doc = new jsPDF("portrait", "pt", "letter");
   const pageWidth = doc.internal.pageSize.getWidth();
   // const pageHeight = doc.internal.pageSize.getHeight();
@@ -27,7 +26,7 @@ export function generateTemplate7PDF(resume) {
   doc.setFontSize(26);
   doc.setTextColor(...headingColor); // Name in black to match the attached template
   // Candidate name
-  doc.text(resume.name || "DEBRA NELSON", marginLeft, currentY);
+  doc.text(resume.name || "", marginLeft, currentY);
   currentY += 20;
 
   // Contact Info (single line with separators)
@@ -37,11 +36,11 @@ export function generateTemplate7PDF(resume) {
 
   const contactItems = [];
   if (resume.address) contactItems.push(resume.address);
-  else contactItems.push("City, State Abbreviation ZIP Code");
+  else contactItems.push("");
   if (resume.phone) contactItems.push(resume.phone);
-  else contactItems.push("(123) 456-7890");
+  else contactItems.push("");
   if (resume.email) contactItems.push(resume.email);
-  else contactItems.push("email@example.com");
+  else contactItems.push("");
   if (resume.linkedIn || resume.portfolio) {
     const links = [];
     if (resume.linkedIn) links.push("LinkedIn");
@@ -80,7 +79,7 @@ export function generateTemplate7PDF(resume) {
 
   const summaryText =
     resume.summary ||
-    "Results-driven bank teller with more than 10 years of experience, excelling in customer relations, institutional banking, and commercial finance. Recognized for effectively delivering banking solutions that help clients meet their financial aspirations. Bachelor of Science in Accounting.";
+    "";
   const summaryLines = doc.splitTextToSize(summaryText, pageWidth - marginLeft * 2);
   summaryLines.forEach((line) => {
     doc.text(line, marginLeft, currentY);
@@ -109,12 +108,12 @@ export function generateTemplate7PDF(resume) {
   if (resume.education && resume.education.length > 0) {
     resume.education.forEach((edu) => {
       // Degree and institution on one line
-      const eduLine = `${edu.degree || "Degree"} | ${edu.school || "University Name, City, State"}`;
+      const eduLine = `${edu.degree || ""} | ${edu.school || ""}`;
       doc.setFont("helvetica", "bold");
       doc.text(eduLine, marginLeft, currentY);
       currentY += lineHeight;
 
-      const eduLine2 = `${edu.school || "University Name, City, State"}`;
+      const eduLine2 = `${edu.school || ""}`;
       doc.setFont("helvetica", "bold");
       doc.text(eduLine2, marginLeft, currentY);
       currentY += lineHeight;
@@ -127,11 +126,11 @@ export function generateTemplate7PDF(resume) {
     });
   } else {
     doc.setFont("helvetica", "bold");
-    doc.text("Bachelor of Science in Accounting | BOSTON UNIVERSITY, Boston, MA", marginLeft, currentY);
+    doc.text("", marginLeft, currentY);
     currentY += lineHeight;
 
     doc.setFont("helvetica", "normal");
-    doc.text("August 2010 - May 2015", marginLeft, currentY);
+    doc.text("", marginLeft, currentY);
     currentY += lineHeight + 15;
   }
 
@@ -156,7 +155,7 @@ export function generateTemplate7PDF(resume) {
   if (resume.workExperience && resume.workExperience.length > 0) {
     resume.workExperience.forEach((exp) => {
       // Job title and company on one line
-      const titleLine = `${exp.jobTitle || "Job Title"} | ${exp.company || "Company Name, City, State"}`;
+      const titleLine = `${exp.jobTitle || ""} | ${exp.company || ""}`;
       doc.setFont("helvetica", "bold");
       doc.text(titleLine, marginLeft, currentY);
       currentY += lineHeight;
@@ -207,15 +206,15 @@ export function generateTemplate7PDF(resume) {
   } else {
     // Default experience entries
     doc.setFont("helvetica", "bold");
-    doc.text("Lead Bank Teller | US Bank, Columbus, OH", marginLeft, currentY);
+    doc.text("", marginLeft, currentY);
     currentY += lineHeight;
 
     doc.setFont("helvetica", "normal");
-    doc.text("June 2018 - present", marginLeft, currentY);
+    doc.text("", marginLeft, currentY);
     currentY += lineHeight + 5;
 
     const job1Points = [
-      "Connected with customers to cross-sell banking products, contributing to a 30% increase in new account sign-ups and a 20% increase in credit card applications within a fiscal year."
+      ""
     ];
     job1Points.forEach(point => {
       doc.setFillColor(...bulletColor);
@@ -229,15 +228,15 @@ export function generateTemplate7PDF(resume) {
     currentY += 15;
 
     doc.setFont("helvetica", "bold");
-    doc.text("Bank Teller | Chase, Columbus, OH", marginLeft, currentY);
+    doc.text("", marginLeft, currentY);
     currentY += lineHeight;
 
     doc.setFont("helvetica", "normal");
-    doc.text("August 2015 - May 2018", marginLeft, currentY);
+    doc.text("", marginLeft, currentY);
     currentY += lineHeight + 5;
 
     const job2Points = [
-      "Identified and prevented fraudulent transactions, protecting against potential losses exceeding $100,000."
+      ""
     ];
     job2Points.forEach(point => {
       doc.setFillColor(...bulletColor);

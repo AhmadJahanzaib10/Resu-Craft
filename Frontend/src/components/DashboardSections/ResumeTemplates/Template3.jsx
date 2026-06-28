@@ -33,21 +33,21 @@ export function generateTemplate3PDF(resume) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   doc.setTextColor(...headingColor);
-  doc.text(resume.name || "YOUR NAME", leftMargin, currentY);
+  doc.text(resume.name || "", leftMargin, currentY);
   currentY += 25;
 
   // Title or short role
   doc.setFont("helvetica", "normal");
   doc.setFontSize(12);
   doc.setTextColor(...accentColor);
-  doc.text(resume.workExperience[0]?.jobTitle || "Senior Graphic Designer", leftMargin, currentY);
+  doc.text(resume.workExperience[0]?.jobTitle || "", leftMargin, currentY);
   currentY += 30;
 
   // Possibly a short summary or profile statement
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...bodyTextColor);
-  const summaryText = resume.summary || "Senior Graphic Designer with X years of experience ...";
+  const summaryText = resume.summary || "";
   const summaryLines = doc.splitTextToSize(summaryText, sidebarWidth - leftMargin * 2);
   summaryLines.forEach((line) => {
     doc.text(line, leftMargin, currentY);
@@ -126,17 +126,17 @@ export function generateTemplate3PDF(resume) {
 
   resume.workExperience.forEach((exp) => {
     // e.g. "May 2019 - Present | Senior Graphic Design Specialist"
-    const experienceHeader = `${exp.duration || "YYYY - YYYY"} | ${exp.jobTitle || "Job Title"}`;
+    const experienceHeader = `${exp.duration || ""} | ${exp.jobTitle || ""}`;
     doc.setFont("helvetica", "bold");
     doc.text(experienceHeader, contentStartX, rightY);
     rightY += lineHeight;
 
     // e.g. "Company Name, Location"
     doc.setFont("helvetica", "normal");
-    doc.text(exp.company || "Company Name", contentStartX, rightY);
+    doc.text(exp.company || "", contentStartX, rightY);
     rightY += lineHeight;
 
-    const splitPoints = (exp.responsibilities || "Describe your role and achievements...")
+    const splitPoints = (exp.responsibilities || "")
       .split(/\r?\n/);
 
     splitPoints.forEach(point => {
@@ -177,14 +177,14 @@ export function generateTemplate3PDF(resume) {
 
   resume.education.forEach((edu) => {
     // e.g. "Month 20XX | Bachelor of Fine Arts"
-    const eduHeader = `${edu.graduationYear || "Year"} | ${edu.degree || "Degree"}`;
+    const eduHeader = `${edu.graduationYear || ""} | ${edu.degree || ""}`;
     doc.setFont("helvetica", "bold");
     doc.text(eduHeader, contentStartX, rightY);
     rightY += lineHeight;
 
     // e.g. "College Name"
     doc.setFont("helvetica", "normal");
-    doc.text(edu.school || "College Name", contentStartX, rightY);
+    doc.text(edu.school || "", contentStartX, rightY);
     rightY += lineHeight + 10;
   });
 

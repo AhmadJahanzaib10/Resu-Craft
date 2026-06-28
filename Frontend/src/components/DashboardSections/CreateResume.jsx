@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as yup from "yup";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { ref as dbRef, get, update } from "firebase/database";
 import { db } from "@/Firebase/firebase.config";
@@ -222,7 +221,16 @@ const ResumeBuilder = ({ setActiveSection }) => {
     const valid = await validateCurrentStep();
     if (valid) {
       setErrorMessage("");
-      setStep((prev) => Math.min(prev + 1, 9));
+      const nextStepNumber = Math.min(step + 1, 9);
+      if (nextStepNumber === 9) {
+        // Force regenerate with current resume state
+        setTimeout(() => {
+          const doc = createPDFDocument();
+          const blob = doc.output("blob");
+          setPdfBlob(blob);
+        }, 100);
+      }
+      setStep(nextStepNumber);
     } else {
       setErrorMessage("Some fields are invalid. Please fix the errors.");
     }
@@ -362,38 +370,6 @@ const ResumeBuilder = ({ setActiveSection }) => {
   
     if (!baseResume.name) baseResume.name = "John Smith";
   
-    if (
-      baseResume.workExperience.length === 0 ||
-      (baseResume.workExperience.length === 1 &&
-        !baseResume.workExperience[0].jobTitle &&
-        !baseResume.workExperience[0].company)
-    ) {
-      baseResume.workExperience = [
-        {
-          jobTitle: "Entry-Level Position",
-          company: "Company Name",
-          startDate: "2023",
-          endDate: "Present",
-          responsibilities: "Seeking first professional role",
-        },
-      ];
-    }
-  
-    if (
-      baseResume.education.length === 0 ||
-      (baseResume.education.length === 1 &&
-        !baseResume.education[0].school &&
-        !baseResume.education[0].degree)
-    ) {
-      baseResume.education = [
-        {
-          school: "University Name",
-          degree: "Bachelor's Degree",
-          graduationYear: "2023",
-        },
-      ];
-    }
-  
     const workExperienceJson = JSON.stringify(
       baseResume.workExperience.map((exp) => ({
         ...exp,
@@ -403,7 +379,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
     const educationJson = JSON.stringify(baseResume.education);
     const additionalContentJson = JSON.stringify(baseResume.additionalContent);
     const skillsJson = JSON.stringify(
-      baseResume.skills.length > 0 ? baseResume.skills : ["No skills provided"]
+      baseResume.skills.length > 0 ? baseResume.skills : []
     );
     const summary = baseResume.summary || "No summary provided";
   
@@ -421,8 +397,8 @@ const ResumeBuilder = ({ setActiveSection }) => {
       Return a valid JSON object with exactly four keys:
         "summary": A concise, professional summary that highlights the candidate's strengths and achievements.
         "skills": An array of 5 key skills relevant to their background or desired position.
-        "workExperience": An array of work experience entries with detailed responsibilities for each job. If they're entry-level, create suitable starter positions with realistic responsibilities.
-        "education": An array of education entries with schools and degrees. Convert abbreviations to extended format (e.g., BSc IT to BSc in Information Technology).
+        "workExperience": An array of work experience entries with detailed responsibilities for each job. If the input work experience is empty, return an empty array [].
+        "education": An array of education entries with schools and degrees. Convert abbreviations to extended format (e.g., BSc IT to BSc in Information Technology). If the input education is empty, return an empty array [].
       
       Do not include any markdown or extra text.
       
@@ -480,8 +456,15 @@ const ResumeBuilder = ({ setActiveSection }) => {
       }
   
       const groqOutput = JSON.parse(responseText);
-      const responsibilitiesString = groqOutput.workExperience[0].responsibilities.join("\n");
-      groqOutput.workExperience[0].responsibilities = responsibilitiesString;
+  
+      if (groqOutput.workExperience?.length > 0) {
+        groqOutput.workExperience = groqOutput.workExperience.map((exp) => ({
+          ...exp,
+          responsibilities: Array.isArray(exp.responsibilities)
+            ? exp.responsibilities.join("\n")
+            : exp.responsibilities,
+        }));
+      }
   
       setAiResume(groqOutput);
       setShowOptimizeModal(true);
@@ -719,7 +702,7 @@ const ResumeBuilder = ({ setActiveSection }) => {
       console.log(resume)
       generatePDFPreview();
     }
-  }, [step]);
+  }, [step,]);
 
   const GradeInput = ({ edu, index, resume, setResume }) => {
     const level = getEducationLevel(edu.degree);

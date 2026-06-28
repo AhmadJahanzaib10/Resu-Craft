@@ -8,6 +8,8 @@ const Stripe = require("stripe");
 
 
 dotenv.config();
+console.log("🔑 Webhook Secret:", process.env.STRIPE_WEBHOOK_SECRET);
+console.log("🔑 Stripe Key:", process.env.STRIPE_API_SECRET_KEY ? "Loaded ✅" : "Missing ❌");
 const app = express();
 app.use(cors({ origin: "*" }));
 
@@ -16,6 +18,7 @@ const stripe = Stripe(process.env.STRIPE_API_SECRET_KEY);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 app.post('/webhook', express.raw({ type: 'application/json' }), async (request, response) => {
+  console.log("🚨 Webhook hit received");
   const sig = request.headers['stripe-signature'];
 
   let event;
@@ -145,6 +148,10 @@ app.post("/create-checkout-session", async (req, res) => {
   try {
     const { priceId, userId, planName } = req.body;
     console.log("Local Session Route Hit")
+    console.log("📦 priceId:", priceId);
+  console.log("👤 userId:", userId);
+  console.log("📋 planName:", planName);
+
 
     if (!priceId) {
       return res.status(400).json({ error: "Missing priceId" });
@@ -166,6 +173,11 @@ app.post("/create-checkout-session", async (req, res) => {
         planName,
       },
     });
+
+    console.log("✅ Session created:", session.id);
+  console.log("🔗 Session URL:", session.url);
+  console.log("📋 Session metadata:", session.metadata);
+  console.log("🔄 Session mode:", session.mode);
 
     res.json({ url: session.url });
   } catch (error) {

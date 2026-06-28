@@ -60,10 +60,10 @@ function CoverBuilderContent({ setActiveSection }) {
   );
 }
 
-function SettingsContent() {
+function SettingsContent(user) {
   return (
     <div>
-      <Settings />
+      <Settings user={user}/>
     </div>
   )
 }
@@ -150,7 +150,7 @@ const Dashboard = () => {
       mainContent = <CoverBuilderContent setActiveSection={handleSectionChange} />;
       break;
     case "Profile":
-      mainContent = <SettingsContent />;
+      mainContent = <SettingsContent user={user}/>;
       break;
     case "Settings":
       mainContent = <SettingsContent />;

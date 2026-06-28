@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { jsPDF } from "jspdf";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 // import { auth } from "../../firebase";
 import { Sparkles, Edit, Save } from "lucide-react";
@@ -37,7 +36,7 @@ function CreateCover() {
   const generateCoverLetter = async () => {
     setLoading(true);
     setErrorMessage("");
-
+  
     const prompt = `
       You are an expert cover letter writer.
       Using the following details:
@@ -45,39 +44,52 @@ function CreateCover() {
       Requester's Name: ${requesterName}
       Company Name: ${companyName}
       Position: ${position}
-
-      make it minimum 150 words.
+  
+      Make it minimum 150 words.
       Generate ONLY the body text for a cover letter that is formal, concise, and tailored to the position.
       Do NOT include any header, salutation, or footer.
       Return a plain JSON object with a single key "body" that contains the cover letter body text.
-       ****STRICT INSTRUCTIONS:
-      - DON'T INCLUDE ANY PLACEHOLDERS IN THE OUTPUT Ex:"[Mention relevant skills] , [Platform where you saw the advertisement - e.g., Acme's website, LinkedIn] ,[Mention something specific about the company that interests you, e.g., innovation in the technology industry, its contributions to the community, its work culture]". GENERATE THE BODY WITH WHATEVER DETAILS PROVIDED.
+      ****STRICT INSTRUCTIONS:
+      - DON'T INCLUDE ANY PLACEHOLDERS IN THE OUTPUT Ex:"[Mention relevant skills], [Platform where you saw the advertisement], [Mention something specific about the company]". GENERATE THE BODY WITH WHATEVER DETAILS PROVIDED.
       ****
       Example output:
       {
         "body": "I am writing to express my interest in the Software Engineer position at Acme Corp. My experience in developing robust software solutions has prepared me to contribute effectively..."
       }
+      Do not include any markdown or code block formatting in your output.
     `;
-    console.log("Gemini Cover Letter Prompt:", prompt);
-
+  
     try {
-      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      const result = await model.generateContent(prompt);
-      console.log("Full Gemini Result:", JSON.stringify(result, null, 2));
-
-      let responseText =
-        result.response?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Groq API error: ${response.status} ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+      let responseText = data.choices?.[0]?.message?.content || "";
       responseText = responseText.trim();
-
-      // Remove code block markers if present.
+  
+      if (!responseText) {
+        throw new Error("Groq returned an empty response.");
+      }
+  
       if (responseText.startsWith("```")) {
         responseText = responseText.replace(/```json|```/g, "").trim();
       }
-      console.log("Cleaned Gemini Response:", responseText);
-
-      const geminiOutput = JSON.parse(responseText);
-      setCoverLetter(geminiOutput.body || "");
+  
+      const groqOutput = JSON.parse(responseText);
+      setCoverLetter(groqOutput.body || "");
       setModalOpen(true);
     } catch (error) {
       console.error("Error generating cover letter:", error);

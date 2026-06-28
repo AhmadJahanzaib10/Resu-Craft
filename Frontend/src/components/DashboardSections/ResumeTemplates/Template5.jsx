@@ -25,7 +25,7 @@ export function generateTemplate5PDF(resume) {
   doc.setFontSize(26);
   doc.setTextColor(...highlightColor);
   // Candidate name
-  doc.text(resume.name || "NELLY SMITH", marginLeft, currentY);
+  doc.text(resume.name || "", marginLeft, currentY);
   currentY += 30;
 
   // Title / job role
@@ -33,7 +33,7 @@ export function generateTemplate5PDF(resume) {
   doc.setFontSize(14);
   doc.setTextColor(...headingColor);
   // We can use first job title or a stored title
-  const jobTitle = resume.workExperience[0]?.jobTitle || "Graphic Designer";
+  const jobTitle = resume.workExperience[0]?.jobTitle || "";
   doc.text(jobTitle, marginLeft, currentY);
   currentY += 30;
 
@@ -75,7 +75,7 @@ export function generateTemplate5PDF(resume) {
 
   const summaryText =
     resume.summary ||
-    "Graphic Design Specialist with X+ years of experience... (sample summary text).";
+    "";
   const summaryLines = doc.splitTextToSize(summaryText, pageWidth - marginLeft * 2);
   summaryLines.forEach((line) => {
     doc.text(line, marginLeft, currentY);
@@ -98,13 +98,13 @@ export function generateTemplate5PDF(resume) {
 
   resume.workExperience.forEach((exp) => {
     // e.g. "Senior Graphic Design Specialist   20XX to Present"
-    const titleLine = `${exp.jobTitle || "Job Title"}   ${exp.duration || "YYYY to YYYY"}`;
+    const titleLine = `${exp.jobTitle || ""}   ${exp.duration || ""}`;
     doc.setFont("helvetica", "bold");
     doc.text(titleLine, marginLeft, currentY);
     currentY += lineHeight;
 
     doc.setFont("helvetica", "normal");
-    doc.text(exp.company || "Company Name, City, State", marginLeft, currentY);
+    doc.text(exp.company || "", marginLeft, currentY);
     currentY += lineHeight;
 
     // Add a small line break after company name
@@ -113,7 +113,7 @@ export function generateTemplate5PDF(resume) {
     // Responsibilities in bullet points
     const respText =
       exp.responsibilities ||
-      "List of achievements, responsibilities, etc. Use bullet points or paragraphs...";
+      "";
 
     // Split responsibilities by newlines
     const splitPoints = respText.split(/\r?\n/);
@@ -158,13 +158,13 @@ export function generateTemplate5PDF(resume) {
 
   resume.education.forEach((edu) => {
     // e.g. "Bachelor of Arts, Communications   20XX"
-    const eduLine = `${edu.degree || "Degree"}, ${edu.graduationYear || "YYYY"}`;
+    const eduLine = `${edu.degree || ""}, ${edu.graduationYear || ""}`;
     doc.setFont("helvetica", "bold");
     doc.text(eduLine, marginLeft, currentY);
     currentY += lineHeight;
 
     doc.setFont("helvetica", "normal");
-    doc.text(edu.school || "University Name, City, State", marginLeft, currentY);
+    doc.text(edu.school || "", marginLeft, currentY);
     currentY += lineHeight + 15;
   });
 
@@ -182,7 +182,7 @@ export function generateTemplate5PDF(resume) {
   doc.setTextColor(...bodyTextColor);
 
   // If resume.skills is an array of strings
-  const skillArray = resume.skills.length > 0 ? resume.skills : ["Photoshop", "Illustrator", "InDesign"];
+  const skillArray = resume.skills.length > 0 ? resume.skills : [""];
   skillArray.forEach((skill) => {
     // bullet each skill
     doc.circle(marginLeft, currentY - 3, 2, "F");

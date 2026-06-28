@@ -158,9 +158,9 @@ export default function Plan() {
   };
 
   const isCurrentPlan = (planName) => {
-    if (!currentSubscription || !currentSubscription.subscription) return false;
+    if (!currentSubscription || !currentSubscription?.subscription) return false;
   
-    const currentPlan = currentSubscription.subscription.plan;
+    const currentPlan = currentSubscription?.subscription?.plan;
     if (!currentPlan) return false;
   
     return currentPlan.toLowerCase() === planName.toLowerCase();
@@ -172,8 +172,8 @@ export default function Plan() {
         {/* Current Subscription Info */}
         {currentSubscription && (
           <div className="max-w-4xl mx-auto mb-12">
-            {currentSubscription.subscription.status === "active" ? <button onClick={cancelSubscription} style={{backgroundColor : "#24356e", display:"flex"}} className='mb-4 gap-2 cursor-pointer py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 mt-auto ms-auto'> <CircleOff/> Cancel Subscription</button> : null}
-            {currentSubscription.subscription.status === "canceled" ? <p className='mb-3'>Your Subscription will be automatically expired at the end date of your plan</p> : null}
+            {currentSubscription?.subscription?.status === "active" ? <button onClick={cancelSubscription} style={{backgroundColor : "#24356e", display:"flex"}} className='mb-4 gap-2 cursor-pointer py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 mt-auto ms-auto'> <CircleOff/> Cancel Subscription</button> : null}
+            {currentSubscription?.subscription?.status === "canceled" ? <p className='mb-3'>Your Subscription will be automatically expired at the end date of your plan</p> : null}
             <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 border-2" style={{ borderColor: '#24356e' }}>
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
@@ -186,7 +186,7 @@ export default function Plan() {
                       Current Subscription
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {currentSubscription.subscription.plan} Plan
+                      {currentSubscription?.subscription?.plan} Plan
                     </p>
                   </div>
                 </div>
@@ -197,7 +197,7 @@ export default function Plan() {
                     <div>
                       <p className="text-xs text-gray-500">Paid Date</p>
                       <p className="text-sm font-semibold" style={{ color: '#24356e' }}>
-                        {currentSubscription.subscription.startDate ? formatDate(currentSubscription.subscription.startDate) : "Not Subscribed"}
+                        {currentSubscription?.subscription?.startDate ? formatDate(currentSubscription?.subscription?.startDate) : "Not Subscribed"}
                       </p>
                     </div>
                   </div>
@@ -207,7 +207,7 @@ export default function Plan() {
                     <div>
                       <p className="text-xs text-gray-500">Expiry Date</p>
                       <p className="text-sm font-semibold" style={{ color: '#24356e' }}>
-                      {currentSubscription.subscription.endDate ? formatDate(currentSubscription.subscription.endDate) : "Not Subscribed"}
+                      {currentSubscription?.subscription?.endDate ? formatDate(currentSubscription?.subscription?.endDate) : "Not Subscribed"}
                       </p>
                     </div>
                   </div>

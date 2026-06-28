@@ -32,16 +32,16 @@ export function generateTemplate2PDF(resume) {
     doc.setFontSize(24);
     doc.setTextColor(0); // black
     doc.setFont("helvetica", "bold");
-    doc.text(`I'm ${resume.name}` || "I'm Your Name", marginLeft, currentY);
+    doc.text(`I'm ${resume.name}` || "", marginLeft, currentY);
     currentY += lineSpacing * 2;
 
     // Contact Info
     doc.setFont("helvetica", "normal");
     doc.setFontSize(normalFontSize);
     const addressLines = [
-        resume.address || "123 YOUR STREET",
-        resume.phone || "(123) 456-7890",
-        resume.email || "NO_REPLY@EXAMPLE.COM",
+        resume.address || "",
+        resume.phone || "",
+        resume.email || "",
     ];
     addressLines.forEach((line) => {
         doc.text(line, marginLeft, currentY);
@@ -74,7 +74,7 @@ export function generateTemplate2PDF(resume) {
     // For example, if resume.skills is an array of strings:
     const skillLines = resume.skills.length
         ? resume.skills
-        : ["Lorem ipsum dolor sit amet", "Consectetur adipiscing elit"];
+        : [""];
     skillLines.forEach((skill) => {
         doc.setFillColor(0, 0, 0); // sets bullet fill color to black
         doc.circle(marginLeft, currentY - 4, 2, "F") // small bullet
@@ -102,32 +102,30 @@ export function generateTemplate2PDF(resume) {
         ? resume.workExperience
         : [
             {
-                company: "Company Name, Location",
-                duration: "Month 20XX - Present",
-                jobTitle: "Job Title",
-                responsibilities: "Lorem ipsum dolor sit amet..."
+                company: "",
+                duration: "",
+                jobTitle: "",
+                responsibilities: ""
             },
         ];
 
     experience.forEach((exp) => {
         // Month + Year + Job Title
         doc.setFont("helvetica", "bold");
-        doc.text(`${exp.duration || "Month 20XX - Present"} - ${exp.jobTitle || "Job Title"}`, marginLeft, currentY);
+        doc.text(`${exp.duration || ""} - ${exp.jobTitle || "Job Title"}`, marginLeft, currentY);
         currentY += lineSpacing;
 
         // Company name
         doc.setFont("helvetica", "normal");
-        doc.text(exp.company || "Company Name, Location", marginLeft, currentY);
+        doc.text(exp.company || "", marginLeft, currentY);
         currentY += lineSpacing;
         // Split responsibilities by new line
-        const splitPoints = (exp.responsibilities || "Lorem ipsum...").split(/\r?\n/);
-        console.log("Split Points are :", splitPoints)
+        const splitPoints = (exp.responsibilities || "").split(/\r?\n/);
 
         splitPoints.forEach(point => {
             if (point.trim()) {
                 // Wrap text to fit within page width
                 const wrappedLines = doc.splitTextToSize(point.trim(), 500);
-                console.log("Wrapped Lines: ", wrappedLines)
                 wrappedLines.forEach((line, idx) => {
                     if (idx === 0) {
                         // First line → draw bullet + text
@@ -161,19 +159,19 @@ export function generateTemplate2PDF(resume) {
         ? resume.education
         : [
             {
-                school: "College Name, Location",
-                degree: "Degree",
-                graduationYear: "Month 20XX"
+                school: "",
+                degree: "",
+                graduationYear: ""
             },
         ];
 
     education.forEach((edu) => {
         doc.setFont("helvetica", "bold");
-        doc.text(`${edu.graduationYear || "Month 20XX"} - ${edu.degree || "Degree"}`, marginLeft, currentY);
+        doc.text(`${edu.graduationYear || ""} - ${edu.degree || ""}`, marginLeft, currentY);
         currentY += lineSpacing;
 
         doc.setFont("helvetica", "normal");
-        doc.text(edu.school || "College Name, Location", marginLeft, currentY);
+        doc.text(edu.school || "", marginLeft, currentY);
         currentY += lineSpacing * 2;
     });
 

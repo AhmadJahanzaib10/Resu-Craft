@@ -24,7 +24,7 @@ export function generateTemplate4PDF(resume) {
   doc.setFontSize(22);
   doc.setTextColor(...headingColor);
   // Name
-  doc.text(resume.name || "LAUREN CHEN", marginLeft, currentY);
+  doc.text(resume.name || "", marginLeft, currentY);
   currentY += 25;
 
   // Contact info on the right side: phone, email, LinkedIn
@@ -53,7 +53,7 @@ export function generateTemplate4PDF(resume) {
   doc.setFont("helvetica", "italic");
   doc.setFontSize(12);
   doc.setTextColor(...accentColor);
-  const topExpTitle = resume.workExperience[0]?.jobTitle || "Digital Marketing Specialist";
+  const topExpTitle = resume.workExperience[0]?.jobTitle || "";
   doc.text(topExpTitle, marginLeft, currentY);
   currentY += 25;
 
@@ -64,7 +64,7 @@ export function generateTemplate4PDF(resume) {
   doc.setFontSize(10);
   doc.setTextColor(...bodyTextColor);
   const summary = resume.summary ||
-    "Digital Marketing Specialist with 4+ years of experience in online marketing, branding, and business strategy...";
+    "";
   const summaryLines = doc.splitTextToSize(summary, pageWidth - marginLeft * 2);
   summaryLines.forEach((line) => {
     doc.text(line, marginLeft, currentY);
@@ -88,7 +88,7 @@ export function generateTemplate4PDF(resume) {
   // We'll place each skill in a "pill." For simplicity, we just draw a rounded rect behind each skill text.
   // We'll assume resume.skills is an array of strings. If empty, use sample data.
   const skillList = resume.skills.length > 0 ? resume.skills :
-    ["Digital Data Analytics/Marketing", "Adobe Photoshop", "Adobe Illustrator", "Google Analytics", "HTML & CSS"];
+    [""];
 
   let currentX = marginLeft;
   const pillHeight = 18;
@@ -131,16 +131,16 @@ export function generateTemplate4PDF(resume) {
     }
     // Job Title
     doc.setFont("helvetica", "bold");
-    doc.text(exp.jobTitle || "Job Title", marginLeft, currentY);
+    doc.text(exp.jobTitle || "", marginLeft, currentY);
     currentY += lineHeight + 5; // Added 5pt extra spacing after job title
 
     // Company
     doc.setFont("helvetica", "normal");
-    doc.text(exp.company || "Company, City, State", marginLeft, currentY);
+    doc.text(exp.company || "", marginLeft, currentY);
     currentY += lineHeight + 8; // Added 8pt extra spacing after company
 
     // Responsibilities
-const splitPoints = (exp.responsibilities || "Describe achievements, tasks, etc...")
+const splitPoints = (exp.responsibilities || "")
 .split(/\r?\n/);
 
 splitPoints.forEach(point => {
@@ -187,12 +187,12 @@ if (point.trim()) {
     }
     // Degree
     doc.setFont("helvetica", "bold");
-    doc.text(edu.degree || "Bachelor of Arts, Communications", marginLeft, currentY);
+    doc.text(edu.degree || "", marginLeft, currentY);
     currentY += lineHeight;
 
     // School
     doc.setFont("helvetica", "normal");
-    doc.text(edu.school || "University Name, City, State", marginLeft, currentY);
+    doc.text(edu.school || "", marginLeft, currentY);
     currentY += lineHeight + 10;
   });
 

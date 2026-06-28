@@ -39,13 +39,13 @@ export function generateTemplate1PDF(resume) {
     // Adjust coordinates and size as needed (here 50x50 at position (margin, 20))
     doc.addImage(resume.photo, "JPEG", 40, 15, 75, 75);
     // Then print the name offset to the right of the image:
-    doc.text(resume.name || "YOUR NAME", pageWidth / 2, 60, { align: "center" });
+    doc.text(resume.name || "", pageWidth / 2, 60, { align: "center" });
   } else {
-    doc.text(resume.name || "YOUR NAME", pageWidth / 2, 60, { align: "center" });
+    doc.text(resume.name || "", pageWidth / 2, 60, { align: "center" });
   }
 
   const topExp = resume.workExperience[0];
-  const topTitle = topExp?.jobTitle || "WEB DEVELOPER";
+  const topTitle = topExp?.jobTitle || "";
   doc.setFontSize(16);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...accentColor);
@@ -106,13 +106,13 @@ export function generateTemplate1PDF(resume) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(12);
   resume.education.forEach((edu) => {
-    const schoolLines = doc.splitTextToSize(edu.school || "Your School", leftMaxWidth);
+    const schoolLines = doc.splitTextToSize(edu.school || "", leftMaxWidth);
     schoolLines.forEach((line) => {
       doc.text(line, leftMargin, currentY);
       currentY += 12;
       currentY = checkPageBreak(currentY);
     });
-    const degreeLine = `${edu.degree || "Your Degree"} (${edu.graduationYear || "Year"})`;
+    const degreeLine = `${edu.degree || ""} (${edu.graduationYear || ""})`;
     const degreeLines = doc.splitTextToSize(degreeLine, leftMaxWidth);
     degreeLines.forEach((line) => {
       doc.text(line, leftMargin, currentY);
@@ -189,7 +189,7 @@ export function generateTemplate1PDF(resume) {
   doc.setFontSize(12);
   rightY += 28 + 5;
   const summaryLines = doc.splitTextToSize(
-    resume.summary || "I am a qualified and professional individual...",
+    resume.summary || "",
     pageWidth - rightMargin - 50
   );
   summaryLines.forEach((line) => {
@@ -212,9 +212,9 @@ export function generateTemplate1PDF(resume) {
   doc.setFontSize(12);
   rightY += 28 + 5;
   resume.workExperience.forEach((exp) => {
-    const jobTitle = exp.jobTitle || "Job Title";
-    const company = exp.company || "Company";
-    const duration = exp.duration || "2020 - Present";
+    const jobTitle = exp.jobTitle || "";
+    const company = exp.company || "";
+    const duration = exp.duration || "";
     const respData = exp.responsibilities;
 
     doc.setFont("helvetica", "bold");
