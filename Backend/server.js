@@ -166,8 +166,8 @@ app.post("/create-checkout-session", async (req, res) => {
           quantity: 1,
         },
       ],
-      success_url: "http://localhost:5173/success",
-      cancel_url: "http://localhost:5173/cancel",
+      success_url: "https://resu-craft-dun.vercel.app/success",
+      cancel_url: "https://resu-craft-dun.vercel.app/cancel",
       metadata: {
         userId,
         planName,
